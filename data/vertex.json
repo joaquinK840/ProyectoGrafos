@@ -1,0 +1,142 @@
+{
+  "BOG": {
+    "city": "Bogotá",
+    "country": "Colombia",
+    "timezone": "America/Bogota",
+    
+    "airlines": ["Avianca", "LATAM", "Copa Airlines"]
+  },
+  "MIA": {
+    "city": "Miami",
+    "country": "Estados Unidos",
+    "timezone": "America/New_York",
+    
+    "airlines": ["American Airlines", "Avianca", "LATAM"]
+  },
+  "GRU": {
+    "city": "São Paulo",
+    "country": "Brasil",
+    "timezone": "America/Sao_Paulo",
+    
+    "airlines": ["LATAM", "Gol", "Azul"]
+  },
+  "LIM": {
+    "city": "Lima",
+    "country": "Perú",
+    "timezone": "America/Lima",
+    
+    "airlines": ["LATAM", "Avianca", "Sky Airline"]
+  },
+  "SCL": {
+    "city": "Santiago",
+    "country": "Chile",
+    "timezone": "America/Santiago",
+    
+    "airlines": ["LATAM", "Sky Airline", "JetSMART"]
+  },
+  "EZE": {
+    "city": "Buenos Aires",
+    "country": "Argentina",
+    "timezone": "America/Argentina/Buenos_Aires",
+    
+    "airlines": ["Aerolíneas Argentinas", "LATAM", "Flybondi"]
+  },
+  "PTY": {
+    "city": "Ciudad de Panamá",
+    "country": "Panamá",
+    "timezone": "America/Panama",
+    
+    "airlines": ["Copa Airlines", "Avianca"]
+  },
+  "MEX": {
+    "city": "Ciudad de México",
+    "country": "México",
+    "timezone": "America/Mexico_City",
+    
+    "airlines": ["Aeroméxico", "Volaris", "VivaAerobus"]
+  },
+  "MDE": {
+    "city": "Medellín",
+    "country": "Colombia",
+    "timezone": "America/Bogota",
+    "": false,
+    "airlines": ["Avianca", "LATAM", "Wingo"]
+  },
+  "CTG": {
+    "city": "Cartagena",
+    "country": "Colombia",
+    "timezone": "America/Bogota",
+    "": false,
+    "airlines": ["Avianca", "Wingo"]
+  },
+  "CLO": {
+    "city": "Cali",
+    "country": "Colombia",
+    "timezone": "America/Bogota",
+    "": false,
+    "airlines": ["Avianca", "LATAM"]
+  },
+  "UIO": {
+    "city": "Quito",
+    "country": "Ecuador",
+    "timezone": "America/Guayaquil",
+    "": false,
+    "airlines": ["LATAM", "Avianca", "Equair"]
+  },
+  "GYE": {
+    "city": "Guayaquil",
+    "country": "Ecuador",
+    "timezone": "America/Guayaquil",
+    "": false,
+    "airlines": ["LATAM", "Avianca"]
+  },
+  "CCS": {
+    "city": "Caracas",
+    "country": "Venezuela",
+    "timezone": "America/Caracas",
+    "": false,
+    "airlines": ["Conviasa", "Laser Airlines"]
+  },
+  "SDQ": {
+    "city": "Santo Domingo",
+    "country": "República Dominicana",
+    "timezone": "America/Santo_Domingo",
+    "": false,
+    "airlines": ["Copa Airlines", "American Airlines", "Arajet"]
+  },
+  "HAV": {
+    "city": "La Habana",
+    "country": "Cuba",
+    "timezone": "America/Havana",
+    "": false,
+    "airlines": ["Cubana", "Copa Airlines"]
+  },
+  "ASU": {
+    "city": "Asunción",
+    "country": "Paraguay",
+    "timezone": "America/Asuncion",
+    "": false,
+    "airlines": ["LATAM", "Aerolíneas Argentinas"]
+  },
+  "MVD": {
+    "city": "Montevideo",
+    "country": "Uruguay",
+    "timezone": "America/Montevideo",
+    "": false,
+    "airlines": ["LATAM", "Aerolíneas Argentinas"]
+  },
+  "VVI": {
+    "city": "Santa Cruz de la Sierra",
+    "country": "Bolivia",
+    "timezone": "America/La_Paz",
+    "": false,
+    "airlines": ["BoA", "LATAM"]
+  },
+  "JFK": {
+    "city": "Nueva York",
+    "country": "Estados Unidos",
+    "timezone": "America/New_York",
+    
+    "airlines": ["American Airlines", "Delta", "Avianca", "LATAM"]
+  }
+}
