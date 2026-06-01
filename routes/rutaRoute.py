@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException, Query
-from algorithms.dijkstra import dijkstra, reconstruir_camino
+
 from algorithms.bfs_dfs import dfs_mayor_destinos, planificacion_basica
-from service.graphService import serialize_airport_graph
+from algorithms.dijkstra import dijkstra, reconstruir_camino
+from algorithms.planificacion_avanzada import (
+    obtener_opciones_planificacion,
+    planificar_avanzado,
+    simular_decision_vuelo,
+)
 from service.graphState import get_graph
-from algorithms.planificacion_avanzada import planificar_avanzado
 
 
 router = APIRouter()
@@ -11,7 +15,7 @@ router = APIRouter()
 
 @router.get("/ruta")
 def get_ruta(origen: str, destino: str, criterio: str = "distancia"):
-    """R2 — Camino mínimo. criterio: distancia | tiempo | costo"""
+    """R2 - Shortest path. criterio: distancia | tiempo | costo."""
     graph = get_graph()
     try:
         distancias, previos = dijkstra(graph, origen.upper(), criterio)
@@ -54,7 +58,7 @@ def get_itinerario(
     criterio: str = "costo",
     excluir_secundarios: bool = False,
 ):
-    """R2 — Mayor cantidad de destinos con restricción."""
+    """R2 - Max destinations with one optimization criterion."""
     graph = get_graph()
     try:
         resultado = dfs_mayor_destinos(
@@ -82,7 +86,7 @@ def get_planificacion_basica(
     excluir_secundarios: bool = False,
     aeronaves: list[str] | None = Query(default=None),
 ):
-    """R2 — Two basic itinerary alternatives with budget/time constraints."""
+    """R2 - Two basic itinerary alternatives with budget/time constraints."""
     graph = get_graph()
     try:
         resultado = planificacion_basica(
@@ -106,18 +110,42 @@ def get_planificacion_basica(
 
 
 @router.get("/itinerario-avanzado")
-def get_itinerario_avanzado(origen: str, presupuesto: float):
-    """R3 — Planificación avanzada con gestión dinámica de presupuesto."""
+def get_itinerario_avanzado(origen: str, presupuesto: float, tiempo_horas: float = 72):
+    """R3 - Start advanced step-by-step planning."""
     graph = get_graph()
     try:
-        resultado = planificar_avanzado(graph, origen.upper(), presupuesto)
+        return planificar_avanzado(
+            graph,
+            origen.upper(),
+            presupuesto,
+            tiempo_disponible=tiempo_horas * 60,
+        )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
 
-    if resultado["destinos"] == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="No se encontró ninguna ruta con el presupuesto dado",
-        )
 
-    return resultado
+@router.post("/itinerario-avanzado/opciones")
+def post_itinerario_avanzado_opciones(estado: dict):
+    """R3 - List decisions available from the submitted planning state."""
+    graph = get_graph()
+    try:
+        return obtener_opciones_planificacion(graph, estado)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.post("/itinerario-avanzado/vuelo")
+def post_itinerario_avanzado_vuelo(payload: dict):
+    """R3 - Apply a user-selected flight and aircraft, then return next options."""
+    graph = get_graph()
+    try:
+        return simular_decision_vuelo(
+            graph,
+            payload["estado"],
+            payload["destino"].upper(),
+            payload["aeronave"],
+        )
+    except KeyError as error:
+        raise HTTPException(status_code=400, detail=f"Campo faltante: {error}") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
