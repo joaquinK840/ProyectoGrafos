@@ -13,6 +13,17 @@ from service.graphState import get_graph, set_graph
 router = APIRouter()
 
 
+def _is_airport_graph(graph):
+    return any(vertex.get_nombre_completo() for vertex in graph.vertices.values())
+
+
+def _serialize_current_graph():
+    graph = get_graph()
+    if _is_airport_graph(graph):
+        return serialize_airport_graph(graph)
+    return serialize_graph(graph)
+
+
 @router.post("/cargar")
 def load_graph(payload: GraphPayload):
     try:
@@ -26,12 +37,15 @@ def load_graph(payload: GraphPayload):
 async def load_graph_file(request: Request):
     try:
         data = json.loads((await request.body()).decode("utf-8"))
-        set_graph(build_graph(data))
+        if "nodos" in data and "aristas" in data:
+            set_graph(build_airport_graph(data))
+        else:
+            set_graph(build_graph(data))
     except json.JSONDecodeError as error:
         raise HTTPException(status_code=400, detail="Archivo JSON invalido") from error
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
-    return {"message": "Archivo cargado correctamente", "graph": serialize_graph(get_graph())}
+    return {"message": "Archivo cargado correctamente", "graph": _serialize_current_graph()}
 
 
 @router.post("/cargar-vuelos")
@@ -46,14 +60,14 @@ def load_airport_graph(payload: dict):
 @router.get("/exportar")
 def export_graph():
     return JSONResponse(
-        content=serialize_graph(get_graph()),
+        content=_serialize_current_graph(),
         headers={"Content-Disposition": "attachment; filename=graph.json"},
     )
 
 
 @router.get("")
 def get_graph_endpoint():
-    return serialize_graph(get_graph())
+    return _serialize_current_graph()
 
 
 @router.get("/aeropuerto/{iata_id}")
