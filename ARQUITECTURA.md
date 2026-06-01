@@ -31,7 +31,8 @@ ProyectoGrafos/
 │
 ├── algorithms/                    # 🧮 ALGORITHMS - Algoritmos de grafos
 │   ├── dijkstra.py               # Algoritmo de Dijkstra (camino mínimo)
-│   └── bfs_dfs.py                # BFS/DFS (búsqueda y exploración)
+│   ├── bfs_dfs.py                # BFS/DFS (búsqueda y exploración)
+│   └── planificacion_avanzada.py # Planificación con costos dinámicos (R3 extendido)
 │
 ├── core/                          # ⭐ CORE - Modelos de dominio
 │   ├── edge/
@@ -56,6 +57,8 @@ ProyectoGrafos/
 ├── service/                       # ⚙️ SERVICE - Lógica de negocio
 │   ├── graphService.py           # Servicios de grafos (construcción, serialización)
 │   ├── graphState.py             # Gestión centralizada del estado global
+│   ├── dijkstraService.py        # Wrapper para Dijkstra multi-criterio
+│   ├── dfsService.py             # Wrapper para DFS multi-criterio
 │   ├── userService.py            # Servicios de usuarios
 │   └── vertexService.py          # Servicios de vértices
 │
@@ -123,6 +126,17 @@ dfs_mayor_destinos(graph, origen, presupuesto, tiempo_disponible, criterio) → 
 - Complejidad: O(V!) en peor caso, con poda temprana
 - **Usado en**: R3 - Itinerario con máximos destinos
 
+#### **Planificación Avanzada** (`planificacion_avanzada.py`) ⭐ NUEVO
+```python
+planificar_avanzado(graph, origen, presupuesto_inicial) → dict
+```
+- Planificación con costos dinámicos y trabajos
+- Modela alojamiento, alimentación, aeronaves
+- Permite trabajar para aumentar presupuesto
+- Toma decisiones en tiempo real
+- Complejidad: O(V!) con simulación de estado
+- **Usado en**: R3 Extendido - Planificación realista
+
 ---
 
 ### 3️⃣ **CAPA DE SERVICIOS (Service)**
@@ -148,6 +162,25 @@ Centraliza la gestión del estado global `current_graph`, evitando múltiples va
 - Single source of truth para el grafo actual
 - Evita inconsistencias entre módulos
 - Facilita testing y refactorización futura
+
+#### **dijkstraService.py** ⭐ NUEVO
+```python
+dijkstra_multi(grafo, salida, filtros) → dict
+dijkstra(grafo, salida, filtro) → dict  # (distancia, nodo_anterior)
+weight_function(filter, edge) → float   # Selector de criterio
+```
+Wrapper que encapsula Dijkstra con soporte multi-criterio:
+- `filtro=1`: distancia
+- `filtro=2`: tiempo
+- `filtro=3`: costo
+
+#### **dfsService.py** ⭐ NUEVO
+```python
+dfs_multi(graph, start, max_weight, filtros) → dict
+dfs(graph, start, max_weight, filtro) → list[str]
+_weight_function(filter_type, edge) → float
+```
+Wrapper que encapsula DFS con soporte multi-criterio y límite de peso.
 
 ---
 
@@ -605,6 +638,46 @@ ruta = dfs_mayor_destinos(
 
 ---
 
+### Planificación Avanzada - Costos Dinámicos
+**Ubicación:** `algorithms/planificacion_avanzada.py`
+
+```python
+def planificar_avanzado(
+    graph,
+    origen: str,
+    presupuesto_inicial: float
+) -> dict:
+    """
+    Planificación con costos dinámicos: alojamiento, alimentación y trabajos.
+    
+    Returns:
+        {
+            "camino": [...],
+            "presupuesto_inicial": float,
+            "total_gastado": float,
+            "total_ganado": float,  # ingresos por trabajos
+            "saldo_final": float,
+            "tiempo_total_min": int,
+            "destinos": int,
+            "log": [...] # registro detallado de decisiones
+        }
+    """
+```
+
+**Características:**
+- **Costos obligatorios**:
+  - Alojamiento: cada 20 horas
+  - Alimentación: cada 8 horas
+- **Trabajos dinámicos**: Se activan cuando presupuesto < 35% del inicial
+- **Decisiones en tiempo real**: DFS con backtracking y simulación
+- **Configuración de aeronaves**: Diferentes tipos (Comercial, Regional, Hélice) con costos/tiempos variables
+- Complejidad: O(V!) con poda temprana
+
+**Caso de uso (R3 Extendido):**
+"Planifica un viaje que maximice destinos, considerando alojamiento, comidas, y la posibilidad de trabajar para ganar dinero cuando el presupuesto sea bajo"
+
+---
+
 ## 💾 Persistencia de Datos
 
 ### Almacenamiento JSON
@@ -844,6 +917,19 @@ Respuesta: {mensaje, grafo actualizado}
 
 ## 📋 Historial de Cambios
 
+### v2.1 (Mayo 31, 2026 - Actualización)
+✅ **Adiciones:**
+- Wrappers de servicios: `dijkstraService.py` y `dfsService.py`
+- Algoritmo de planificación avanzada: `planificacion_avanzada.py`
+- Soporte para múltiples criterios (distance, time, cost) en servicios
+- Costos dinámicos: alojamiento, alimentación, trabajos
+
+✅ **Mejoras:**
+- Encapsulación de lógica de peso en funciones `weight_function`
+- Soporte para diferentes tipos de aeronaves
+- Simulación dinámica de presupuesto y tiempo
+- Decisiones inteligentes: trabajos cuando presupuesto baja
+
 ### v2.0 (Mayo 31, 2026)
 ✅ **Adiciones:**
 - Capa de algoritmos (`algorithms/`) con Dijkstra y DFS/BFS
@@ -851,7 +937,6 @@ Respuesta: {mensaje, grafo actualizado}
 - Nuevos routers: `redRoute.py` y `rutaRoute.py`
 - Documentación de algoritmos y complejidad
 - Flujos de operaciones principales (R2, R3, R4)
-- Sección de algoritmos implementados
 
 ✅ **Mejoras:**
 - Refactorización: variable global → `graphState.py`
