@@ -9,7 +9,17 @@ Complejidad: O((V + E) log V) con heap.
 """
 import heapq
 
-def dijkstra(graph, origen: str, criterio: str) -> tuple[dict, dict]:
+from core.edge.edge import normalize_aircraft_name
+
+
+def dijkstra(
+    graph,
+    origen: str,
+    criterio: str,
+    destino: str | None = None,
+    excluir_secundarios: bool = False,
+    aeronaves_permitidas: list[str] | None = None,
+) -> tuple[dict, dict]:
     """
     Calcula el camino mínimo desde origen a todos los demás nodos.
 
@@ -61,8 +71,14 @@ def dijkstra(graph, origen: str, criterio: str) -> tuple[dict, dict]:
             if not graph.vertices[vecino].get_available():
                 continue
 
+            if excluir_secundarios and vecino != destino and not graph.vertices[vecino].is_hub():
+                continue
+
+            if aeronaves_permitidas and not _edge_has_allowed_aircraft(edge, aeronaves_permitidas):
+                continue
+
             # Peso según criterio
-            peso = _get_peso(edge, criterio)
+            peso = _get_peso(edge, criterio, aeronaves_permitidas)
             nuevo_costo = costo_actual + peso
 
             if nuevo_costo < distancias[vecino]:
@@ -105,4 +121,40 @@ def _get_peso(edge, criterio: str) -> float:
         return edge.calculate_time()
     elif criterio == "costo":
         return edge.calculate_cost()
+    return edge.get_distance()
+
+
+def _edge_has_allowed_aircraft(edge, aeronaves_permitidas: list[str]) -> bool:
+    allowed = {normalize_aircraft_name(aircraft) for aircraft in aeronaves_permitidas}
+    return any(
+        normalize_aircraft_name(aircraft) in allowed
+        for aircraft in (edge.get_aeronaves() or ["Avion Comercial"])
+    )
+
+
+def _get_filtered_options(edge, aeronaves_permitidas: list[str] | None):
+    options = edge.get_aircraft_options()
+    if not aeronaves_permitidas:
+        return options
+
+    allowed = {normalize_aircraft_name(aircraft) for aircraft in aeronaves_permitidas}
+    return [
+        option
+        for option in options
+        if option["nombre_normalizado"] in allowed
+    ]
+
+
+def _get_peso(edge, criterio: str, aeronaves_permitidas: list[str] | None = None) -> float:
+    """Devuelve el peso de la arista segun el criterio elegido."""
+    options = _get_filtered_options(edge, aeronaves_permitidas)
+    if not options:
+        return float("inf")
+
+    if criterio == "distancia":
+        return edge.get_distance()
+    elif criterio == "tiempo":
+        return min(option["tiempo"] for option in options)
+    elif criterio == "costo":
+        return min(option["costo"] for option in options)
     return edge.get_distance()
