@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from algorithms.dijkstra import dijkstra, reconstruir_camino
-from algorithms.bfs_dfs import dfs_mayor_destinos
+from algorithms.bfs_dfs import dfs_mayor_destinos, planificacion_basica
 from service.graphService import serialize_airport_graph
 from service.graphState import get_graph
 from algorithms.planificacion_avanzada import planificar_avanzado
@@ -72,6 +72,38 @@ def get_itinerario(
         raise HTTPException(status_code=404, detail="No hay ruta dentro de las restricciones dadas")
 
     return resultado
+
+
+@router.get("/planificacion-basica")
+def get_planificacion_basica(
+    origen: str,
+    presupuesto: float,
+    tiempo_horas: float,
+    excluir_secundarios: bool = False,
+    aeronaves: list[str] | None = Query(default=None),
+):
+    """R2 — Two basic itinerary alternatives with budget/time constraints."""
+    graph = get_graph()
+    try:
+        resultado = planificacion_basica(
+            graph,
+            origen.upper(),
+            presupuesto=presupuesto,
+            tiempo_disponible=tiempo_horas * 60,
+            excluir_secundarios=excluir_secundarios,
+            aeronaves_permitidas=aeronaves,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+    if (
+        resultado["alternativa_presupuesto"]["destinos"] == 0
+        and resultado["alternativa_tiempo"]["destinos"] == 0
+    ):
+        raise HTTPException(status_code=404, detail="No hay rutas dentro de las restricciones dadas")
+
+    return resultado
+
 
 @router.get("/itinerario-avanzado")
 def get_itinerario_avanzado(origen: str, presupuesto: float):
