@@ -102,7 +102,7 @@ def _get_peso(edge, criterio: str) -> float:
     if criterio == "distancia":
         return edge.get_distance()
     elif criterio == "tiempo":
-        return edge.get_time() if edge.get_time() > 0 else edge.get_distance() * 0.7
+        return edge.calculate_time()
     elif criterio == "costo":
-        return edge.get_cost() if edge.get_cost() > 0 else edge.get_distance() * 0.18
+        return edge.calculate_cost()
     return edge.get_distance()
