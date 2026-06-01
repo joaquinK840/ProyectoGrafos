@@ -71,3 +71,76 @@ def serialize_graph(graph):
         "vertices": vertices,
         "edges": edges,
     }
+
+def build_airport_graph(data: dict):
+    """Construye el grafo desde el nuevo JSON aeroportuario.
+    Args:
+        data (dict): JSON con claves 'nodos' y 'aristas'.
+    Returns:
+        Directed_Graph: grafo con todos los campos aeroportuarios cargados.
+    """
+    if "nodos" not in data or "aristas" not in data:
+        raise ValueError("Formato inválido: faltan claves 'nodos' y/o 'aristas'")
+
+    graph = Directed_Graph()
+
+    # ── 1. Crear y cargar cada vértice ─────────────────
+    for node_data in data["nodos"]:
+        vertex = Vertex(node_data["id"])
+        vertex.load_from_dict(node_data)
+        graph.add_vertex(vertex)
+
+    # ── 2. Crear y cargar cada arista ──────────────────
+    for edge_data in data["aristas"]:
+        vertex1 = graph.get_vertex(edge_data["origen"])
+        vertex2 = graph.get_vertex(edge_data["destino"])
+        edge = Edge(
+            vertex1,
+            vertex2,
+            distance=edge_data.get("distanciaKm", 0),
+        )
+        edge.load_from_dict(edge_data)
+        graph.add_edge(edge)
+
+    return graph
+
+
+def serialize_airport_graph(graph):
+    """Serializa el grafo aeroportuario para el frontend (React Flow)."""
+    nodos = []
+    for vertex in graph.vertices.values():
+        nodos.append({
+            "id": vertex.get_name(),
+            "nombre": vertex.get_nombre_completo(),
+            "ciudad": vertex.get_ciudad(),
+            "pais": vertex.get_pais(),
+            "zona_horaria": vertex.get_zona_horaria(),
+            "es_hub": vertex.is_hub(),
+            "aerolineas": vertex.get_aerolineas(),
+            "costo_alojamiento": vertex.get_costo_alojamiento(),
+            "costo_alimentacion": vertex.get_costo_alimentacion(),
+            "actividades": vertex.get_actividades(),
+            "trabajos": vertex.get_trabajos(),
+            "grado_salida": vertex.get_degree(),
+        })
+
+    aristas = []
+    for vertex in graph.vertices.values():
+        for edge in vertex.neighbors:
+            aristas.append({
+                "origen": edge.get_vertex1().get_name(),
+                "destino": edge.get_vertex2().get_name(),
+                "distancia_km": edge.get_distance(),
+                "aeronaves": edge.get_aeronaves(),
+                "costo_base": edge.get_costo_base(),
+                "estancia_minima": edge.get_estancia_minima(),
+                "disponible": edge.is_available(),
+            })
+
+    return {
+        "directed": True,
+        "nodos": nodos,
+        "aristas": aristas,
+        "total_nodos": len(nodos),
+        "total_aristas": len(aristas),
+    }

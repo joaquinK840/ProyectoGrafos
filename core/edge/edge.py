@@ -23,6 +23,12 @@ class Edge:
         self.time = time
         self.cost = cost
 
+        # ── Campos de ruta aérea ───────────────────────────
+        self.aeronaves = []       # ej. ["Avión Comercial", "Hélice"]
+        self.costo_base = -1.0    # 0 = subsidiada, -1 = no aplica
+        self.estancia_minima = 0  # minutos mínimos en destino
+        self.available = True     # False = ruta bloqueada (R4)
+
         #getters y setters
     def get_vertex1(self):
         """Devuelve el nodo origen de la arista.
@@ -57,6 +63,37 @@ class Edge:
             int: Costo de la arista.
         """
         return self.cost
+    
+
+    def get_aeronaves(self):
+        return self.aeronaves
+
+    def get_costo_base(self):
+        return self.costo_base
+
+    def is_subsidiada(self):
+        """True si el costo base es 0 (ruta subsidiada)."""
+        return self.costo_base == 0.0
+
+    def get_estancia_minima(self):
+        return self.estancia_minima
+
+    def is_available(self):
+        return self.available
+
+    def set_available(self, available):
+        """Bloquea o desbloquea la ruta. Se usa en R4."""
+        self.available = available
+
+    def load_from_dict(self, data: dict):
+        """Carga los campos de ruta aérea desde el dict del JSON.
+        Args:
+            data (dict): Arista del JSON con campos de la ruta.
+        """
+        self.aeronaves = data.get("aeronaves", [])
+        self.costo_base = data.get("costoBase", -1.0)
+        self.estancia_minima = data.get("estanciaMinima", 0)
+
     
     def __str__(self):
         """Devuelve una cadena que representa la arista.

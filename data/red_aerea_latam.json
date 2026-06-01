@@ -1,0 +1,59 @@
+{
+  "nodos": [
+    {
+      "id": "BOG", "nombre": "El Dorado", "ciudad": "Bogotá", "pais": "Colombia",
+      "zonaHoraria": "America/Bogota", "esHub": true, "aerolineas": ["Avianca"],
+      "costoAlojamiento": 45, "costoAlimentacion": 12,
+      "actividades": [
+        {"nombre": "Museo del Oro", "tipo": "opcional", "duracion_min": 120, "costo_usd": 5},
+        {"nombre": "Tour Monserrate", "tipo": "opcional", "duracion_min": 180, "costo_usd": 20}
+      ],
+      "trabajos": [
+        {"nombre": "Cargador de equipaje", "tarifa_hora": 8.5, "max_horas": 8},
+        {"nombre": "Guía de aeropuerto", "tarifa_hora": 12, "max_horas": 6}
+      ]
+    },
+    {
+      "id": "MDE", "nombre": "José María Córdova", "ciudad": "Medellín", "pais": "Colombia",
+      "zonaHoraria": "America/Bogota", "esHub": false, "aerolineas": ["Avianca"],
+      "costoAlojamiento": 40, "costoAlimentacion": 10,
+      "actividades": [
+        {"nombre": "Parque Arví", "tipo": "opcional", "duracion_min": 240, "costo_usd": 15}
+      ],
+      "trabajos": [
+        {"nombre": "Asistente de rampa", "tarifa_hora": 9, "max_horas": 8}
+      ]
+    },
+    {
+      "id": "LIM", "nombre": "Jorge Chávez", "ciudad": "Lima", "pais": "Perú",
+      "zonaHoraria": "America/Lima", "esHub": true, "aerolineas": ["LATAM"],
+      "costoAlojamiento": 50, "costoAlimentacion": 13,
+      "actividades": [
+        {"nombre": "Museo Larco", "tipo": "opcional", "duracion_min": 150, "costo_usd": 15}
+      ],
+      "trabajos": [
+        {"nombre": "Cargador de equipaje", "tarifa_hora": 7, "max_horas": 8},
+        {"nombre": "Guía de aeropuerto", "tarifa_hora": 10, "max_horas": 6}
+      ]
+    },
+    {
+      "id": "SCL", "nombre": "Arturo Merino", "ciudad": "Santiago", "pais": "Chile",
+      "zonaHoraria": "America/Santiago", "esHub": true, "aerolineas": ["LATAM"],
+      "costoAlojamiento": 60, "costoAlimentacion": 16,
+      "actividades": [
+        {"nombre": "Tour Viña del Mar", "tipo": "opcional", "duracion_min": 360, "costo_usd": 40}
+      ],
+      "trabajos": [
+        {"nombre": "Asistente de rampa", "tarifa_hora": 11, "max_horas": 8}
+      ]
+    }
+  ],
+  "aristas": [
+    {"origen": "BOG", "destino": "MDE", "distanciaKm": 230, "aeronaves": ["Avión Comercial"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "MDE", "destino": "BOG", "distanciaKm": 230, "aeronaves": ["Avión Comercial"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "BOG", "destino": "LIM", "distanciaKm": 1900, "aeronaves": ["Avión Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "LIM", "destino": "BOG", "distanciaKm": 1900, "aeronaves": ["Avión Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "LIM", "destino": "SCL", "distanciaKm": 2450, "aeronaves": ["Avión Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "SCL", "destino": "LIM", "distanciaKm": 2450, "aeronaves": ["Avión Comercial"], "costoBase": -1, "estanciaMinima": 180}
+  ]
+}
