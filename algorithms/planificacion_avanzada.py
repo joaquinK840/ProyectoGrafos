@@ -11,13 +11,6 @@ Diferencia con R2 (DFS simple):
 Algoritmo: DFS con backtracking + simulación de tiempo y presupuesto.
 """
 
-# Configuración por defecto de aeronaves
-AIRCRAFT_CONFIG = {
-    "Avión Comercial": {"costo_km": 0.18, "tiempo_km": 0.7},
-    "Avión Regional":  {"costo_km": 0.25, "tiempo_km": 1.1},
-    "Hélice":          {"costo_km": 0.12, "tiempo_km": 2.5},
-}
-
 INTERVALO_ALOJAMIENTO = 20 * 60   # 20 horas en minutos
 INTERVALO_ALIMENTACION = 8 * 60   # 8 horas en minutos
 UMBRAL_TRABAJO = 0.35              # 35% del presupuesto inicial
@@ -94,15 +87,10 @@ def planificar_avanzado(
                 continue
 
             # ── Calcular costo y tiempo del tramo ─────────────────
-            aeronave = edge.get_aeronaves()[0] if edge.get_aeronaves() else "Avión Comercial"
-            config = AIRCRAFT_CONFIG.get(aeronave, AIRCRAFT_CONFIG["Avión Comercial"])
-
-            if edge.is_subsidiada():
-                costo_tramo = 0
-            else:
-                costo_tramo = round(edge.get_distance() * config["costo_km"], 2)
-
-            tiempo_tramo = round(edge.get_distance() * config["tiempo_km"], 1)
+            opcion_aeronave = edge.get_best_aircraft_option("costo")
+            aeronave = opcion_aeronave["nombre"]
+            costo_tramo = edge.calculate_cost(aeronave)
+            tiempo_tramo = edge.calculate_time(aeronave)
             nuevo_tiempo = tiempo_acum + tiempo_tramo
 
             # ── Costos obligatorios acumulados ────────────────────

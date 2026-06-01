@@ -73,8 +73,9 @@ def dfs_mayor_destinos(
                 continue
 
             # Calcular costo y tiempo del tramo
-            costo_tramo = _get_costo(edge)
-            tiempo_tramo = _get_tiempo(edge)
+            option = edge.get_best_aircraft_option("tiempo" if criterio == "tiempo" else "costo")
+            costo_tramo = edge.calculate_cost(option["nombre"])
+            tiempo_tramo = edge.calculate_time(option["nombre"])
 
             # Poda: verificar restricciones antes de seguir
             if costo_acum + costo_tramo > presupuesto:
@@ -96,18 +97,3 @@ def dfs_mayor_destinos(
     _dfs(origen, {origen}, [origen], 0, 0)
     return mejor
 
-
-def _get_costo(edge) -> float:
-    """Costo del tramo — usa costo directo o calcula por distancia."""
-    if edge.get_cost() > 0:
-        return edge.get_cost()
-    # Fallback: Avión Comercial por defecto
-    return edge.get_distance() * 0.18
-
-
-def _get_tiempo(edge) -> float:
-    """Tiempo del tramo en minutos."""
-    if edge.get_time() > 0:
-        return edge.get_time()
-    # Fallback: Avión Comercial por defecto
-    return edge.get_distance() * 0.7

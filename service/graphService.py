@@ -90,6 +90,8 @@ def build_airport_graph(data: dict):
         vertex.load_from_dict(node_data)
         graph.add_vertex(vertex)
 
+    aircraft_config = data.get("aeronaves", {})
+
     # ── 2. Crear y cargar cada arista ──────────────────
     for edge_data in data["aristas"]:
         vertex1 = graph.get_vertex(edge_data["origen"])
@@ -99,7 +101,7 @@ def build_airport_graph(data: dict):
             vertex2,
             distance=edge_data.get("distanciaKm", 0),
         )
-        edge.load_from_dict(edge_data)
+        edge.load_from_dict(edge_data, aircraft_config)
         graph.add_edge(edge)
 
     return graph
@@ -132,6 +134,7 @@ def serialize_airport_graph(graph):
                 "destino": edge.get_vertex2().get_name(),
                 "distancia_km": edge.get_distance(),
                 "aeronaves": edge.get_aeronaves(),
+                "opciones_aeronaves": edge.get_aircraft_options(),
                 "costo_base": edge.get_costo_base(),
                 "estancia_minima": edge.get_estancia_minima(),
                 "disponible": edge.is_available(),
