@@ -1,0 +1,7 @@
+# Python bytecode / caché
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de configuración local (opcional, por si acaso)
+.env
