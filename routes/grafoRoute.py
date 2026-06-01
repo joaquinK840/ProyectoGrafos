@@ -2,12 +2,18 @@ import json
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
-from schemas.grafoSchema import GraphPayload
-from schemas.edgeSchema import EdgePayload
-from schemas.vertexSchema import VertexPayload
 
 from core.edge.edge import Edge
 from core.vertex.vertex import Vertex
+from schemas.dfsSchema import DFSFilterResponse, DFSMultiResponse, DFSPayload
+from schemas.dijkstraSchema import (DijkstraFilterResponse,
+                                    DijkstraMultiResponse,
+                                    DijkstraNodeResponse, DijkstraPayload)
+from schemas.edgeSchema import EdgePayload
+from schemas.grafoSchema import GraphPayload
+from schemas.vertexSchema import VertexPayload
+from service.dfsService import dfs_multi
+from service.dijkstraService import dijkstra_multi
 from service.graphService import build_graph, serialize_graph
 
 router = APIRouter()
@@ -101,3 +107,68 @@ def get_neighbors(vertex_name: str):
         "vertex": vertex_name,
         "neighbors": [neighbor.get_name() for neighbor in neighbors],
     }
+
+@router.post("/shortRoute")
+def get_shortRoute(payload: DijkstraPayload):
+    """Calcula las rutas más cortas usando el algoritmo de Dijkstra con múltiples filtros."""
+    graph = get_current_graph()
+    try:
+        start_vertex = graph.get_vertex(payload.start_vertex)
+        results = dijkstra_multi(graph, start_vertex, payload.filters)
+        
+        filter_names = {1: "distance", 2: "time", 3: "cost"}
+        responses = []
+        
+        for filter_id in payload.filters:
+            distancia, nodo_anterior = results[filter_id]
+            filter_results = []
+            
+            for vertex, dist in distancia.items():
+                previous = nodo_anterior[vertex].get_name() if nodo_anterior[vertex] else None
+                filter_results.append(DijkstraNodeResponse(
+                    vertex=vertex.get_name(),
+                    distance=dist,
+                    previous=previous
+                ))
+            
+            responses.append(DijkstraFilterResponse(
+                filter_id=filter_id,
+                filter_name=filter_names.get(filter_id, "unknown"),
+                results=filter_results
+            ))
+        
+        return DijkstraMultiResponse(
+            start_vertex=payload.start_vertex,
+            responses=responses
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@router.post("/dfs")
+def get_dfs(payload: DFSPayload):
+    """Recorre el grafo usando DFS con un peso máximo limitado y múltiples filtros."""
+    graph = get_current_graph()
+    try:
+        start_vertex = graph.get_vertex(payload.start_vertex)
+        results = dfs_multi(graph, start_vertex, payload.max_weight, payload.filters)
+        
+        filter_names = {1: "distance", 2: "time", 3: "cost"}
+        responses = []
+        
+        for filter_id in payload.filters:
+            visited = results[filter_id]
+            responses.append(DFSFilterResponse(
+                filter_id=filter_id,
+                filter_name=filter_names.get(filter_id, "unknown"),
+                visited_vertices=visited,
+                total_count=len(visited)
+            ))
+        
+        return DFSMultiResponse(
+            start_vertex=payload.start_vertex,
+            max_weight=payload.max_weight,
+            responses=responses
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error

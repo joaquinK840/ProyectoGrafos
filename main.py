@@ -23,4 +23,4 @@ app.include_router(vertex_router, prefix="/vertex", tags=["Vertex"])
 
 @app.get("/")
 def home():
-    return {"message": "Hola FastAPI"}
+    return {"message": "Agrega un /docs en la URL para probar los endpoints de la API"}
