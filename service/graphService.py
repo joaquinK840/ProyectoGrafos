@@ -83,6 +83,13 @@ def build_airport_graph(data: dict):
         raise ValueError("Formato inválido: faltan claves 'nodos' y/o 'aristas'")
 
     graph = Directed_Graph()
+    graph.aircraft_config = data.get("aeronaves", {})
+    graph.global_config = {
+        "presupuestoMinimoPorc": data.get("presupuestoMinimoPorc", 35),
+        "intervaloAlojamiento": data.get("intervaloAlojamiento", 20),
+        "intervaloAlimentacion": data.get("intervaloAlimentacion", 8),
+        "limiteSubsidioPorc": data.get("limiteSubsidioPorc", 20),
+    }
 
     # ── 1. Crear y cargar cada vértice ─────────────────
     for node_data in data["nodos"]:
@@ -90,7 +97,7 @@ def build_airport_graph(data: dict):
         vertex.load_from_dict(node_data)
         graph.add_vertex(vertex)
 
-    aircraft_config = data.get("aeronaves", {})
+    aircraft_config = graph.aircraft_config
 
     # ── 2. Crear y cargar cada arista ──────────────────
     for edge_data in data["aristas"]:
@@ -142,6 +149,8 @@ def serialize_airport_graph(graph):
 
     return {
         "directed": True,
+        "aeronaves": getattr(graph, "aircraft_config", {}),
+        "configuracion": getattr(graph, "global_config", {}),
         "nodos": nodos,
         "aristas": aristas,
         "total_nodos": len(nodos),

@@ -33,7 +33,7 @@ def dijkstra(
         previos:    dict {nodo: nodo_anterior} — para reconstruir el camino.
     """
     # ── Validar criterio ──────────────────────────────────────────────
-    criterios_validos = {"distancia", "tiempo", "costo"}
+    criterios_validos = {"distancia", "tiempo", "costo", "combinado"}
     if criterio not in criterios_validos:
         raise ValueError(f"Criterio '{criterio}' inválido. Use: {criterios_validos}")
 
@@ -157,4 +157,9 @@ def _get_peso(edge, criterio: str, aeronaves_permitidas: list[str] | None = None
         return min(option["tiempo"] for option in options)
     elif criterio == "costo":
         return min(option["costo"] for option in options)
+    elif criterio == "combinado":
+        return min(
+            edge.get_distance() / 1000 + option["tiempo"] / 60 + option["costo"] / 100
+            for option in options
+        )
     return edge.get_distance()

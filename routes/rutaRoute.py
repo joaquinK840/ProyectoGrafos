@@ -4,8 +4,12 @@ from algorithms.bfs_dfs import dfs_mayor_destinos, planificacion_basica
 from algorithms.dijkstra import dijkstra, reconstruir_camino
 from core.edge.edge import normalize_aircraft_name
 from algorithms.planificacion_avanzada import (
+    generar_reporte_final,
     obtener_opciones_planificacion,
     planificar_avanzado,
+    planificar_avanzado_automatico,
+    simular_decision_actividad,
+    simular_decision_trabajo,
     simular_decision_vuelo,
 )
 from service.graphState import get_graph
@@ -29,6 +33,15 @@ def _choose_aircraft_option(edge, criterio: str, aeronaves: list[str] | None = N
 
     if criterio == "tiempo":
         return min(options, key=lambda option: (option["tiempo"], option["costo"]))
+    if criterio == "combinado":
+        return min(
+            options,
+            key=lambda option: (
+                edge.get_distance() / 1000 + option["tiempo"] / 60 + option["costo"] / 100,
+                option["costo"],
+                option["tiempo"],
+            ),
+        )
     return min(options, key=lambda option: (option["costo"], option["tiempo"]))
 
 
@@ -40,7 +53,7 @@ def get_ruta(
     excluir_secundarios: bool = False,
     aeronaves: list[str] | None = Query(default=None),
 ):
-    """R2 - Shortest path. criterio: distancia | tiempo | costo."""
+    """R2 - Shortest path. criterio: distancia | tiempo | costo | combinado."""
     graph = get_graph()
     origen = origen.upper()
     destino = destino.upper()
@@ -179,6 +192,27 @@ def get_itinerario_avanzado(origen: str, presupuesto: float, tiempo_horas: float
         raise HTTPException(status_code=400, detail=str(error))
 
 
+@router.get("/itinerario-avanzado/automatico")
+def get_itinerario_avanzado_automatico(
+    origen: str,
+    presupuesto: float,
+    tiempo_horas: float = 72,
+    max_expansiones: int = 20000,
+):
+    """R3 - Automatically maximize destinations and minimize spending."""
+    graph = get_graph()
+    try:
+        return planificar_avanzado_automatico(
+            graph,
+            origen.upper(),
+            presupuesto,
+            tiempo_disponible=tiempo_horas * 60,
+            max_expansiones=max_expansiones,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
 @router.post("/itinerario-avanzado/opciones")
 def post_itinerario_avanzado_opciones(estado: dict):
     """R3 - List decisions available from the submitted planning state."""
@@ -202,5 +236,48 @@ def post_itinerario_avanzado_vuelo(payload: dict):
         )
     except KeyError as error:
         raise HTTPException(status_code=400, detail=f"Campo faltante: {error}") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.post("/itinerario-avanzado/actividad")
+def post_itinerario_avanzado_actividad(payload: dict):
+    """R3 - Apply a user-selected optional activity."""
+    graph = get_graph()
+    try:
+        return simular_decision_actividad(
+            graph,
+            payload["estado"],
+            payload["actividad"],
+        )
+    except KeyError as error:
+        raise HTTPException(status_code=400, detail=f"Campo faltante: {error}") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.post("/itinerario-avanzado/trabajo")
+def post_itinerario_avanzado_trabajo(payload: dict):
+    """R3 - Apply a temporary job and update budget/time."""
+    graph = get_graph()
+    try:
+        return simular_decision_trabajo(
+            graph,
+            payload["estado"],
+            payload["trabajo"],
+            payload["horas"],
+        )
+    except KeyError as error:
+        raise HTTPException(status_code=400, detail=f"Campo faltante: {error}") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.post("/itinerario-avanzado/reporte")
+def post_itinerario_avanzado_reporte(estado: dict):
+    """R3/R5 - Generate the final report from the current advanced state."""
+    graph = get_graph()
+    try:
+        return generar_reporte_final(graph, estado)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
