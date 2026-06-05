@@ -92,9 +92,13 @@ ProyectoGrafos/
 ```
 grafoRoute.py   → POST   /grafo/cargar
                   POST   /grafo/cargar-archivo
-redRoute.py     → PUT    /red/bloquear             (R4 - Bloquear rutas)
-rutaRoute.py    → GET    /ruta                    (R2 - Camino mínimo)
-                  GET    /itinerario              (R3 - Máximos destinos)
+redRoute.py     → PUT    /grafo/bloquear          (R4 - Bloquear rutas)
+rutaRoute.py    → GET    /grafo/ruta              (R2 - Camino mínimo)
+                  GET    /grafo/itinerario        (R3 - Máximos destinos)
+                  GET    /grafo/planificacion-basica    (R3 - Dos alternativas)
+                  GET    /grafo/itinerario-avanzado    (R3 Avanzado - Paso a paso)
+                  POST   /grafo/itinerario-avanzado/opciones
+                  POST   /grafo/itinerario-avanzado/vuelo
 userRoute.py    → Endpoints CRUD de usuarios
 vertexRoute.py  → Endpoints CRUD de vértices
 ```
@@ -471,18 +475,22 @@ def home():
 | GET | `/grafo/actual` | Obtener grafo actual cargado |
 | POST | `/grafo/guardar` | Guardar grafo actual |
 
-### Rutas - Búsqueda de Caminos (`/ruta`)
+### Rutas - Búsqueda de Caminos (`/grafo`)
 | Método | Endpoint | Descripción | Algoritmo |
 |--------|----------|-------------|-----------|
-| GET | `/ruta?origen=A&destino=B&criterio=distancia` | R2 - Camino mínimo | Dijkstra |
-| GET | `/itinerario?origen=A&presupuesto=1000&tiempo=480` | R3 - Máximos destinos | DFS + Backtracking |
+| GET | `/grafo/ruta?origen=A&destino=B&criterio=distancia` | R2 - Camino mínimo | Dijkstra |
+| GET | `/grafo/itinerario?origen=A&presupuesto=1000&tiempo_horas=8` | R3 - Máximos destinos | DFS + Backtracking |
+| GET | `/grafo/planificacion-basica?origen=A&presupuesto=1000&tiempo_horas=8` | R3 - Dos alternativas | DFS |
+| GET | `/grafo/itinerario-avanzado?origen=A&presupuesto=5000&tiempo_horas=72` | R3 Avanzado - Inicio | DFS + Simulación |
+| POST | `/grafo/itinerario-avanzado/opciones` | R3 Avanzado - Opciones | Estado actual |
+| POST | `/grafo/itinerario-avanzado/vuelo` | R3 Avanzado - Aplicar decisión | Simulación |
 
-**Parámetros de `/ruta`:**
+**Parámetros de `/grafo/ruta`:**
 - `origen` (str): Código de origen
 - `destino` (str): Código de destino  
 - `criterio` (str): `distancia` \| `tiempo` \| `costo`
 
-**Respuesta de `/ruta`:**
+**Respuesta de `/grafo/ruta`:**
 ```json
 {
   "criterio": "distancia",
@@ -491,22 +499,22 @@ def home():
   "costo_total": 50,
   "camino": ["A", "C", "B"],
   "tramos": [
-    {"origen": "A", "destino": "C", "distancia_km": 30},
-    {"origen": "C", "destino": "B", "distancia_km": 20}
+    {"origen": "A", "destino": "C", "distancia_km": 30, "aeronaves": ["Comercial"]},
+    {"origen": "C", "destino": "B", "distancia_km": 20, "aeronaves": ["Regional"]}
   ]
 }
 ```
 
-### Rutas - Gestión (`/red`)
+### Rutas - Gestión (`/grafo`)
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| PUT | `/red/bloquear?origen=A&destino=B` | R4 - Bloquear una ruta |
-| GET | `/red/disponibles?origen=A` | Obtener rutas disponibles desde A |
-| PUT | `/red/desbloquear?origen=A&destino=B` | Desbloquear una ruta |
+| PUT | `/grafo/bloquear?origen=A&destino=B` | R4 - Bloquear una ruta |
+| GET | `/grafo/disponibles?origen=A` | Obtener rutas disponibles desde A |
+| PUT | `/grafo/desbloquear?origen=A&destino=B` | Desbloquear una ruta |
 
 **R4 - Bloquear Ruta:**
 ```
-PUT /red/bloquear?origen=MAD&destino=NYC
+PUT /grafo/bloquear?origen=MAD&destino=NYC
 ```
 Respuesta:
 ```json
@@ -638,30 +646,70 @@ ruta = dfs_mayor_destinos(
 
 ---
 
-### Planificación Avanzada - Costos Dinámicos
+### Planificación Básica - Dos Alternativas
+**Ubicación:** `algorithms/bfs_dfs.py`
+
+```python
+def planificacion_basica(
+    graph,
+    origen: str,
+    presupuesto: float,
+    tiempo_disponible: int,
+    excluir_secundarios: bool = False,
+    aeronaves_permitidas: list | None = None
+) → dict
+```
+
+**Características:**
+- Genera **dos alternativas** automáticamente:
+  1. Maximiza destinos respetando **presupuesto**
+  2. Maximiza destinos respetando **tiempo**
+- Permite seleccionar aeronaves específicas
+- Opción para excluir aeropuertos secundarios
+- No requiere iteración del usuario
+
+**Respuesta:**
+```json
+{
+  "alternativa_presupuesto": {
+    "camino": [...],
+    "destinos": 5,
+    "costo_total": 4950,
+    "tiempo_total": 480
+  },
+  "alternativa_tiempo": {
+    "camino": [...],
+    "destinos": 7,
+    "costo_total": 5200,
+    "tiempo_total": 478
+  }
+}
+```
+
+**Caso de uso (R3 básico):**
+"Dame dos opciones de viaje: una optimizada para presupuesto y otra para tiempo, ambas maximizando destinos"
+
+---
+
+### Planificación Avanzada - Costos Dinámicos (Interactiva)
 **Ubicación:** `algorithms/planificacion_avanzada.py`
 
 ```python
 def planificar_avanzado(
     graph,
     origen: str,
-    presupuesto_inicial: float
-) -> dict:
-    """
-    Planificación con costos dinámicos: alojamiento, alimentación y trabajos.
-    
-    Returns:
-        {
-            "camino": [...],
-            "presupuesto_inicial": float,
-            "total_gastado": float,
-            "total_ganado": float,  # ingresos por trabajos
-            "saldo_final": float,
-            "tiempo_total_min": int,
-            "destinos": int,
-            "log": [...] # registro detallado de decisiones
-        }
-    """
+    presupuesto_inicial: float,
+    tiempo_disponible: int = 72 * 60
+) → dict
+
+def obtener_opciones_planificacion(graph, estado: dict) → dict
+
+def simular_decision_vuelo(
+    graph,
+    estado: dict,
+    destino: str,
+    aeronave: str
+) → dict
 ```
 
 **Características:**
@@ -671,10 +719,16 @@ def planificar_avanzado(
 - **Trabajos dinámicos**: Se activan cuando presupuesto < 35% del inicial
 - **Decisiones en tiempo real**: DFS con backtracking y simulación
 - **Configuración de aeronaves**: Diferentes tipos (Comercial, Regional, Hélice) con costos/tiempos variables
+- **Interactividad**: Sistema paso-a-paso con opciones en cada decisión
 - Complejidad: O(V!) con poda temprana
 
-**Caso de uso (R3 Extendido):**
-"Planifica un viaje que maximice destinos, considerando alojamiento, comidas, y la posibilidad de trabajar para ganar dinero cuando el presupuesto sea bajo"
+**Funciones principales:**
+1. `planificar_avanzado()` - Inicia la planificación
+2. `obtener_opciones_planificacion()` - Lista decisiones disponibles
+3. `simular_decision_vuelo()` - Aplica una decisión y actualiza estado
+
+**Caso de uso (R3 Extendido - Interactivo):**
+"Planifica un viaje paso a paso, permitiendo al usuario elegir vuelos, considerar alojamiento/comidas, y trabajar si es necesario para mantener el viaje"
 
 ---
 
@@ -724,6 +778,8 @@ data/
 | **Strategy Pattern** | Dijkstra vs DFS | Diferentes algoritmos seleccionables |
 | **Algorithm Encapsulation** | `algorithms/` | Algoritmos como módulos reutilizables |
 | **Dependency Injection** | FastAPI | Inyección de dependencias implícita |
+| **Facade Pattern** | `dijkstraService.py`, `dfsService.py` | Simplifica interfaz de algoritmos complejos |
+| **State Machine Pattern** | `planificacion_avanzada.py` | Transiciones de estado paso a paso en planning |
 
 ---
 
@@ -760,10 +816,17 @@ data/
    - Documentación automática
    - Seguridad de tipos en tiempo de ejecución
 
-### 7. **CORS Habilitado**
-   - Permite solicitudes desde cualquier origen
-   - Facilita desarrollo frontend
-   - *Producción:* Restringir a dominios específicos
+### 8. **Consolidación de Endpoints bajo `/grafo`**
+   - Todos los routers (`grafoRoute`, `redRoute`, `rutaRoute`) registrados con prefijo `/grafo`
+   - Simplifica navegación de API y facilita documentación
+   - Agrupa operaciones relacionadas bajo un solo namespace
+   - Endpoints disponibles: `/grafo/cargar`, `/grafo/ruta`, `/grafo/itinerario`, `/grafo/planificacion-basica`, `/grafo/itinerario-avanzado`, `/grafo/bloquear`
+
+### 9. **Planificación Avanzada Interactiva**
+   - Sistema paso-a-paso con POST para capturar decisiones del usuario
+   - Estado persistente en memoria durante la sesión
+   - Flujo de decisiones: elegir vuelo → actualizar presupuesto/tiempo → mostrar opciones siguientes
+   - Facilita UIs complejas que requieren múltiples interacciones
 
 ---
 
@@ -819,9 +882,13 @@ data/
 3. *Mejora futura:* Implementar caché (Redis) para operaciones frecuentes
 
 ### Algoritmos
-1. **Dijkstra**: Garantizado para pesos no-negativos
+1. **Dijkstra**: Garantizado para pesos no-negativos ✓
 2. **DFS**: Puede ser lento en grafos muy grandes (considerar heurísticas)
-3. *Mejora futura:* Agregar A* con heurística euclidiana para aeropuertos reales
+3. **Planificación Avanzada**: Simula decisiones en tiempo real con costos dinámicos
+   - Alojamiento cada 20 horas, alimentación cada 8 horas
+   - Trabajos disponibles cuando presupuesto < 35%
+   - Requiere gestión de estado en memoria
+4. *Mejora futura:* Agregar A* con heurística euclidiana para aeropuertos reales
 
 ### Escalabilidad
 1. Estructura actual es buena base para:
@@ -870,7 +937,7 @@ Respuesta: {grafo serializado}
 ### Flujo 2: Camino Mínimo (R2 - Dijkstra)
 
 ```
-GET /ruta?origen=A&destino=B&criterio=distancia
+GET /grafo/ruta?origen=A&destino=B&criterio=distancia
         ↓
 rutaRoute.get_ruta() ← Valida parámetros
         ↓
@@ -883,10 +950,10 @@ algorithms.dijkstra.reconstruir_camino() ← Extrae ruta óptima
 Respuesta: {camino, costo_total, tramos}
 ```
 
-### Flujo 3: Máximos Destinos (R3 - DFS)
+### Flujo 3: Máximos Destinos (R3 - DFS Simple)
 
 ```
-GET /itinerario?origen=A&presupuesto=1000&tiempo=480
+GET /grafo/itinerario?origen=A&presupuesto=1000&tiempo_horas=8
         ↓
 rutaRoute.get_itinerario() ← Valida restricciones
         ↓
@@ -897,10 +964,56 @@ algorithms.bfs_dfs.dfs_mayor_destinos() ← Explora todas rutas
 Respuesta: {camino, destinos_visitados, costo_total, tiempo_total}
 ```
 
+### Flujo 3b: Planificación Básica (R3 - Dos Alternativas)
+
+```
+GET /grafo/planificacion-basica?origen=A&presupuesto=1000&tiempo_horas=8
+        ↓
+rutaRoute.get_planificacion_basica() ← Valida parámetros
+        ↓
+graphState.get_graph() ← Obtiene grafo en memoria
+        ↓
+algorithms.bfs_dfs.planificacion_basica() ← Genera 2 alternativas
+        ├─ alternativa_presupuesto: maximiza destinos respetando presupuesto
+        └─ alternativa_tiempo: maximiza destinos respetando tiempo
+        ↓
+Respuesta: {alternativa_presupuesto, alternativa_tiempo}
+```
+
+### Flujo 3c: Planificación Avanzada (R3 - Paso a Paso Interactivo)
+
+```
+INICIO:
+GET /grafo/itinerario-avanzado?origen=A&presupuesto=5000&tiempo_horas=72
+        ↓
+rutaRoute.get_itinerario_avanzado() ← Inicia simulación
+        ↓
+algorithms.planificacion_avanzada.planificar_avanzado() 
+        ↓
+Respuesta: {estado_actual, opciones_disponibles, log}
+
+ITERACIÓN (POST):
+POST /grafo/itinerario-avanzado/opciones {estado: {...}}
+        ↓
+algorithms.planificacion_avanzada.obtener_opciones_planificacion()
+        ↓
+Respuesta: {vuelos_disponibles, trabajos_disponibles}
+
+POST /grafo/itinerario-avanzado/vuelo {estado, destino, aeronave}
+        ↓
+algorithms.planificacion_avanzada.simular_decision_vuelo()
+        ├─ Actualiza presupuesto y tiempo
+        ├─ Verifica alojamiento y comida
+        ├─ Evalúa trabajos si presupuesto < 35%
+        └─ Retorna nuevo estado
+        ↓
+Respuesta: {nuevo_estado, opciones_siguientes, log}
+```
+
 ### Flujo 4: Bloquear Ruta (R4)
 
 ```
-PUT /red/bloquear?origen=A&destino=B
+PUT /grafo/bloquear?origen=A&destino=B
         ↓
 redRoute.bloquear_ruta() ← Valida parámetros
         ↓
@@ -916,6 +1029,44 @@ Respuesta: {mensaje, grafo actualizado}
 ---
 
 ## 📋 Historial de Cambios
+
+### v2.3 (Junio 3, 2026 - Mejora de Documentación)
+✅ **Documentación:**
+- Actualización completa del `readme.md` con guía de inicio rápido mejorada
+- Resumen ejecutivo con características principales
+- Tabla de stack tecnológico y requisitos previos
+- Ejemplos de endpoints con solicitudes/respuestas
+- Sección de arquitectura resumida con referencia a ARQUITECTURA.md
+- Guía de testing y próximas mejoras
+
+✅ **Referencias:**
+- README ahora enlaza a ARQUITECTURA.md para documentación completa
+- Mejor estructura para desarrolladores nuevos
+- Swagger UI y ReDoc destacados como recursos principales
+
+✅ **Mejoras:**
+- Documentación más accesible para nuevos desarrolladores
+- Ejemplos prácticos de uso de API
+- Claridad en arquitectura en capas
+
+---
+
+### v2.2 (Mayo 31, 2026 - Consolidación de Endpoints)
+✅ **Consolidaciones:**
+- Todos los endpoints ahora bajo prefijo `/grafo` (anteriormente `/ruta` y `/red` separados)
+- `redRoute.py` → PUT /grafo/bloquear
+- `rutaRoute.py` → GET /grafo/ruta, GET /grafo/itinerario, GET /grafo/planificacion-basica, GET/POST /grafo/itinerario-avanzado
+
+✅ **Nuevos Endpoints (R3 Extended):**
+- `GET /grafo/planificacion-basica` - Genera dos alternativas automáticamente (presupuesto vs tiempo)
+- `GET /grafo/itinerario-avanzado` - Inicia planning interactivo
+- `POST /grafo/itinerario-avanzado/opciones` - Lista decisiones disponibles
+- `POST /grafo/itinerario-avanzado/vuelo` - Aplica decisión y actualiza estado
+
+✅ **Mejoras:**
+- Consolidación de rutas para API más coherente
+- Sistema paso-a-paso para planning avanzado
+- 6 endpoints totales en rutaRoute + 1 en redRoute
 
 ### v2.1 (Mayo 31, 2026 - Actualización)
 ✅ **Adiciones:**
@@ -951,5 +1102,5 @@ Respuesta: {mensaje, grafo actualizado}
 
 ---
 
-*Documento actualizado: Mayo 31, 2026*
+*Documento actualizado: Junio 3, 2026*
 *Proporcionando contexto arquitectónico completo del proyecto ProyectoGrafos*

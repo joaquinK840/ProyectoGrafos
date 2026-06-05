@@ -1,22 +1,22 @@
-from core.graph.directed_graph import Directed_Graph
 from core.graph.undirected_graph import Undirected_graph
 from core.vertex.vertex import Vertex
 from core.edge.edge import Edge
+from core.vertex.airport_vertex import AirportVertex
+from core.edge.airport_edge import AirportEdge, AIRCRAFT_DEFAULTS
+from core.graph.directed_graph import Directed_Graph
 
-def build_graph(data:dict):
-    """funcion que construye el diccionario del grafo a un objeto de tipo grafo
-    Args:        data (dict): diccionario con la estructura del grafo a construir
-    Returns:        Directed_Graph or Undirected_graph: objeto de tipo grafo construido a partir del diccionario
+
+def build_graph(data: dict):
+    """
+    Builds a generic directed/undirected graph from a simple dict format.
+    Expected keys: 'directed', 'vertices' (list of str), 'edges' (list of dicts).
     """
     directed = data.get("directed", True)
-    if directed:
-        graph = Directed_Graph()
-    else:
-        graph = Undirected_graph()
+    graph = Directed_Graph() if directed else Undirected_graph()
 
     if "vertices" not in data or "edges" not in data:
-        raise ValueError("Invalid graph or invalid format:missing 'vertices' and/or 'edges' key")
-    
+        raise ValueError("Invalid format: missing 'vertices' and/or 'edges'")
+
     for vertex_name in data["vertices"]:
         graph.add_vertex(Vertex(vertex_name))
 
@@ -27,123 +27,125 @@ def build_graph(data:dict):
             vertex1,
             vertex2,
             distance=edge_data.get("distance", 0),
-            time=edge_data.get("time",0),
-            cost=edge_data.get("cost",0)
+            time=edge_data.get("time", 0),
+            cost=edge_data.get("cost", 0),
         ))
     return graph
 
 
-def serialize_graph(graph):
-    """Convierte un objeto grafo en un diccionario exportable como JSON."""
+def serialize_graph(graph) -> dict:
+    """Serializes a generic graph to a JSON-exportable dict."""
     directed = not isinstance(graph, Undirected_graph)
     vertices = sorted(graph.vertices.keys())
     edges = []
-    seen_edges = set()
 
     for vertex in graph.vertices.values():
         for edge in vertex.neighbors:
-            vertex1 = edge.get_vertex1().get_name()
-            vertex2 = edge.get_vertex2().get_name()
-            distance = edge.get_distance()
-            time = edge.get_time()
-            cost = edge.get_cost()
-
-            """"
-            Lo omito porque aun no uso grafos no dirigidos,
-            pero esta parte del codigo es para evitar que se exporten aristas duplicadas en grafos no dirigidos
-            if not directed:
-                edge_key = tuple(sorted((vertex1, vertex2)) + [distance, time, cost])
-                if edge_key in seen_edges:
-                    continue
-                seen_edges.add(edge_key)
-            """
-
             edges.append({
-                "vertex1": vertex1,
-                "vertex2": vertex2,
-                "distance": distance,
-                "time": time,
-                "cost": cost,
+                "vertex1": edge.get_vertex1().get_name(),
+                "vertex2": edge.get_vertex2().get_name(),
+                "distance": edge.get_distance(),
+                "time": edge.get_time(),
+                "cost": edge.get_cost(),
             })
 
-    return {
-        "directed": directed,
-        "vertices": vertices,
-        "edges": edges,
-    }
+    return {"directed": directed, "vertices": vertices, "edges": edges}
 
-def build_airport_graph(data: dict):
-    """Construye el grafo desde el nuevo JSON aeroportuario.
-    Args:
-        data (dict): JSON con claves 'nodos' y 'aristas'.
-    Returns:
-        Directed_Graph: grafo con todos los campos aeroportuarios cargados.
+
+def build_airport_graph(data: dict) -> Directed_Graph:
     """
-    if "nodos" not in data or "aristas" not in data:
-        raise ValueError("Formato inválido: faltan claves 'nodos' y/o 'aristas'")
-
+    Builds a directed graph from the airport JSON schema.
+    Expected keys: 'nodos', 'aristas', and optional 'config'.
+    Extends build_graph() without modifying it (OCP).
+    """
     graph = Directed_Graph()
 
-    # ── 1. Crear y cargar cada vértice ─────────────────
-    for node_data in data["nodos"]:
-        vertex = Vertex(node_data["id"])
-        vertex.load_from_dict(node_data)
+    # Merge aircraft config: defaults + any overrides from JSON
+    config = data.get("config", {})
+    aircraft_config = AIRCRAFT_DEFAULTS.copy()
+    for tipo, valores in config.get("aeronaves", {}).items():
+        base = aircraft_config.get(tipo, {})
+        aircraft_config[tipo] = {
+            "costo_km": valores.get("costoKm", base.get("costo_km", 0.18)),
+            "tiempo_km": valores.get("tiempoKm", base.get("tiempo_km", 0.7)),
+        }
+
+    # Build vertices
+    for nodo in data.get("nodos", []):
+        vertex = AirportVertex(
+            iata_id=nodo["id"],                              # ← usa iata_id
+            nombre=nodo.get("nombre", ""),
+            ciudad=nodo.get("ciudad", ""),
+            pais=nodo.get("pais", ""),
+            zona_horaria=nodo.get("zonaHoraria", ""),
+            es_hub=nodo.get("esHub", False),
+            costo_alojamiento=nodo.get("costoAlojamiento", 0.0),
+            costo_alimentacion=nodo.get("costoAlimentacion", 0.0),
+            actividades=nodo.get("actividades", []),
+            trabajos=nodo.get("trabajos", []),
+        )
         graph.add_vertex(vertex)
 
-    aircraft_config = data.get("aeronaves", {})
+    # Build edges
+    for arista in data.get("aristas", []):
+        origen = graph.get_vertex(arista["origen"])
+        destino = graph.get_vertex(arista["destino"])
 
-    # ── 2. Crear y cargar cada arista ──────────────────
-    for edge_data in data["aristas"]:
-        vertex1 = graph.get_vertex(edge_data["origen"])
-        vertex2 = graph.get_vertex(edge_data["destino"])
-        edge = Edge(
-            vertex1,
-            vertex2,
-            distance=edge_data.get("distanciaKm", 0),
+        if not origen or not destino:
+            continue  # Skip edge if either node is missing
+
+        edge = AirportEdge(
+            vertex1=origen,
+            vertex2=destino,
+            distancia_km=arista.get("distanciaKm", 0.0),
+            aeronaves=arista.get("aeronaves", []),
+            costo_base=arista.get("costoBase", -1.0),
+            estancia_minima=arista.get("estanciaMinima", 0),
+            aircraft_config=aircraft_config,
         )
-        edge.load_from_dict(edge_data, aircraft_config)
         graph.add_edge(edge)
 
     return graph
 
 
-def serialize_airport_graph(graph):
-    """Serializa el grafo aeroportuario para el frontend (React Flow)."""
+def serialize_airport_graph(graph) -> dict:
+    """Serializes an airport graph (AirportVertex + AirportEdge) to dict."""
     nodos = []
     for vertex in graph.vertices.values():
-        nodos.append({
+        nodo = {
             "id": vertex.get_name(),
-            "nombre": vertex.get_nombre_completo(),
-            "ciudad": vertex.get_ciudad(),
-            "pais": vertex.get_pais(),
-            "zona_horaria": vertex.get_zona_horaria(),
-            "es_hub": vertex.is_hub(),
-            "aerolineas": vertex.get_aerolineas(),
-            "costo_alojamiento": vertex.get_costo_alojamiento(),
-            "costo_alimentacion": vertex.get_costo_alimentacion(),
-            "actividades": vertex.get_actividades(),
-            "trabajos": vertex.get_trabajos(),
-            "grado_salida": vertex.get_degree(),
-        })
+            "available": vertex.get_available(),
+        }
+        if hasattr(vertex, "es_hub"):
+            nodo.update({
+                "nombre": vertex.nombre,
+                "ciudad": vertex.ciudad,
+                "pais": vertex.pais,
+                "zonaHoraria": vertex.zona_horaria,
+                "esHub": vertex.es_hub,
+                "costoAlojamiento": vertex.costo_alojamiento,
+                "costoAlimentacion": vertex.costo_alimentacion,
+                "actividades": vertex.actividades,
+                "trabajos": vertex.trabajos,
+            })
+        nodos.append(nodo)
 
     aristas = []
     for vertex in graph.vertices.values():
-        for edge in vertex.neighbors:
-            aristas.append({
+        for edge in vertex.get_neighbors():
+            arista = {
                 "origen": edge.get_vertex1().get_name(),
                 "destino": edge.get_vertex2().get_name(),
-                "distancia_km": edge.get_distance(),
-                "aeronaves": edge.get_aeronaves(),
-                "opciones_aeronaves": edge.get_aircraft_options(),
-                "costo_base": edge.get_costo_base(),
-                "estancia_minima": edge.get_estancia_minima(),
-                "disponible": edge.is_available(),
-            })
+                "available": edge.get_available() if hasattr(edge, "get_available") else True,
+            }
+            if hasattr(edge, "distancia_km"):
+                arista.update({
+                    "distanciaKm": edge.distancia_km,
+                    "aeronaves": edge.aeronaves,
+                    "costoBase": edge.costo_base,
+                    "estanciaMinima": edge.estancia_minima,
+                    "opcionesAeronave": edge.get_opciones_aeronave(),
+                })
+            aristas.append(arista)
 
-    return {
-        "directed": True,
-        "nodos": nodos,
-        "aristas": aristas,
-        "total_nodos": len(nodos),
-        "total_aristas": len(aristas),
-    }
+    return {"nodos": nodos, "aristas": aristas}

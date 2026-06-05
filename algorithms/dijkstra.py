@@ -52,7 +52,7 @@ def dijkstra(graph, origen: str, criterio: str) -> tuple[dict, dict]:
 
         for edge in vertex.neighbors:
             # Saltar rutas bloqueadas (R4)
-            if not edge.is_available():
+            if not edge.get_available():
                 continue
 
             vecino = edge.get_vertex2().get_name()
@@ -74,35 +74,38 @@ def dijkstra(graph, origen: str, criterio: str) -> tuple[dict, dict]:
 
 
 def reconstruir_camino(previos: dict, origen: str, destino: str) -> list[str]:
-    """
-    Reconstruye la secuencia de nodos desde origen hasta destino
-    usando el dict de previos que devuelve dijkstra().
-
-    Returns:
-        Lista de códigos IATA en orden, o [] si no hay camino.
-    """
     camino = []
     nodo = destino
 
     while nodo is not None:
         camino.append(nodo)
-        nodo = previos[nodo]
+        nodo = previos.get(nodo)
 
     camino.reverse()
 
-    # Verificar que el camino realmente llega al origen
-    if camino[0] != origen:
+    if not camino or camino[0] != origen:
         return []
 
     return camino
 
 
 def _get_peso(edge, criterio: str) -> float:
-    """Devuelve el peso de la arista según el criterio elegido."""
+    """Returns edge weight according to the chosen criterion.
+    For airport edges, uses the cheapest available aircraft as default."""
     if criterio == "distancia":
-        return edge.get_distance()
-    elif criterio == "tiempo":
-        return edge.calculate_time()
-    elif criterio == "costo":
-        return edge.calculate_cost()
+        # Works for both Edge and AirportEdge
+        return getattr(edge, "distancia_km", edge.get_distance())
+
+    if hasattr(edge, "aeronaves") and edge.aeronaves:
+        # Pick the aircraft with lowest cost/time for this criterion
+        if criterio == "costo":
+            return min(edge.calcular_costo(a) for a in edge.aeronaves)
+        elif criterio == "tiempo":
+            return min(edge.calcular_tiempo(a) for a in edge.aeronaves)
+
+    # Fallback for generic Edge
+    if criterio == "tiempo":
+        return edge.get_time()
+    if criterio == "costo":
+        return edge.get_cost()
     return edge.get_distance()

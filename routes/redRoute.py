@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from service.graphService import serialize_airport_graph
 from service.graphState import get_graph
