@@ -2,9 +2,14 @@ from fastapi import APIRouter, HTTPException, Query
 
 from algorithms.bfs_dfs import dfs_mayor_destinos, planificacion_basica
 from algorithms.dijkstra import dijkstra, reconstruir_camino
+from core.edge.edge import normalize_aircraft_name
 from algorithms.planificacion_avanzada import (
+    generar_reporte_final,
     obtener_opciones_planificacion,
     planificar_avanzado,
+    planificar_avanzado_automatico,
+    simular_decision_actividad,
+    simular_decision_trabajo,
     simular_decision_vuelo,
 )
 from service.graphState import get_graph
@@ -13,38 +18,101 @@ from service.graphState import get_graph
 router = APIRouter()
 
 
+def _choose_aircraft_option(edge, criterio: str, aeronaves: list[str] | None = None):
+    options = edge.get_aircraft_options()
+    if aeronaves:
+        allowed = {normalize_aircraft_name(aircraft) for aircraft in aeronaves}
+        options = [
+            option
+            for option in options
+            if option["nombre_normalizado"] in allowed
+        ]
+
+    if not options:
+        raise ValueError("La ruta no tiene aeronaves permitidas")
+
+    if criterio == "tiempo":
+        return min(options, key=lambda option: (option["tiempo"], option["costo"]))
+    if criterio == "combinado":
+        return min(
+            options,
+            key=lambda option: (
+                edge.get_distance() / 1000 + option["tiempo"] / 60 + option["costo"] / 100,
+                option["costo"],
+                option["tiempo"],
+            ),
+        )
+    return min(options, key=lambda option: (option["costo"], option["tiempo"]))
+
+
 @router.get("/ruta")
-def get_ruta(origen: str, destino: str, criterio: str = "distancia"):
-    """R2 - Shortest path. criterio: distancia | tiempo | costo."""
+def get_ruta(
+    origen: str,
+    destino: str,
+    criterio: str = "distancia",
+    excluir_secundarios: bool = False,
+    aeronaves: list[str] | None = Query(default=None),
+):
+    """R2 - Shortest path. criterio: distancia | tiempo | costo | combinado."""
     graph = get_graph()
+    origen = origen.upper()
+    destino = destino.upper()
+
+    if destino not in graph.vertices:
+        raise HTTPException(status_code=400, detail=f"Aeropuerto destino '{destino}' no existe en el grafo")
+
     try:
-        distancias, previos = dijkstra(graph, origen.upper(), criterio)
+        distancias, previos = dijkstra(
+            graph,
+            origen,
+            criterio,
+            destino=destino,
+            excluir_secundarios=excluir_secundarios,
+            aeronaves_permitidas=aeronaves,
+        )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
 
-    destino = destino.upper()
     if distancias[destino] == float("inf"):
         raise HTTPException(status_code=404, detail=f"No hay ruta de {origen} a {destino}")
 
-    camino = reconstruir_camino(previos, origen.upper(), destino)
+    camino = reconstruir_camino(previos, origen, destino)
     tramos = []
+    distancia_total = 0
+    tiempo_total = 0
+    costo_total = 0
+
     for i in range(len(camino) - 1):
         v1, v2 = camino[i], camino[i + 1]
         for edge in graph.vertices[v1].neighbors:
             if edge.get_vertex2().get_name() == v2:
+                option = _choose_aircraft_option(edge, criterio, aeronaves)
+                distancia = edge.get_distance()
+                tiempo = option["tiempo"]
+                costo = option["costo"]
+                distancia_total += distancia
+                tiempo_total += tiempo
+                costo_total += costo
                 tramos.append({
                     "origen": v1,
                     "destino": v2,
-                    "distancia_km": edge.get_distance(),
+                    "aeronave": option["nombre"],
                     "aeronaves": edge.get_aeronaves(),
+                    "distancia_km": distancia,
+                    "tiempo_tramo": tiempo,
+                    "tiempo_acumulado": round(tiempo_total, 1),
+                    "costo_tramo": costo,
+                    "costo_acumulado": round(costo_total, 2),
                 })
                 break
 
     return {
         "criterio": criterio,
-        "origen": origen.upper(),
+        "origen": origen,
         "destino": destino,
-        "costo_total": distancias[destino],
+        "distancia_total": distancia_total,
+        "tiempo_total": round(tiempo_total, 1),
+        "costo_total": round(costo_total, 2),
         "camino": camino,
         "tramos": tramos,
     }
@@ -124,6 +192,27 @@ def get_itinerario_avanzado(origen: str, presupuesto: float, tiempo_horas: float
         raise HTTPException(status_code=400, detail=str(error))
 
 
+@router.get("/itinerario-avanzado/automatico")
+def get_itinerario_avanzado_automatico(
+    origen: str,
+    presupuesto: float,
+    tiempo_horas: float = 72,
+    max_expansiones: int = 20000,
+):
+    """R3 - Automatically maximize destinations and minimize spending."""
+    graph = get_graph()
+    try:
+        return planificar_avanzado_automatico(
+            graph,
+            origen.upper(),
+            presupuesto,
+            tiempo_disponible=tiempo_horas * 60,
+            max_expansiones=max_expansiones,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
 @router.post("/itinerario-avanzado/opciones")
 def post_itinerario_avanzado_opciones(estado: dict):
     """R3 - List decisions available from the submitted planning state."""
@@ -147,5 +236,48 @@ def post_itinerario_avanzado_vuelo(payload: dict):
         )
     except KeyError as error:
         raise HTTPException(status_code=400, detail=f"Campo faltante: {error}") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.post("/itinerario-avanzado/actividad")
+def post_itinerario_avanzado_actividad(payload: dict):
+    """R3 - Apply a user-selected optional activity."""
+    graph = get_graph()
+    try:
+        return simular_decision_actividad(
+            graph,
+            payload["estado"],
+            payload["actividad"],
+        )
+    except KeyError as error:
+        raise HTTPException(status_code=400, detail=f"Campo faltante: {error}") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.post("/itinerario-avanzado/trabajo")
+def post_itinerario_avanzado_trabajo(payload: dict):
+    """R3 - Apply a temporary job and update budget/time."""
+    graph = get_graph()
+    try:
+        return simular_decision_trabajo(
+            graph,
+            payload["estado"],
+            payload["trabajo"],
+            payload["horas"],
+        )
+    except KeyError as error:
+        raise HTTPException(status_code=400, detail=f"Campo faltante: {error}") from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.post("/itinerario-avanzado/reporte")
+def post_itinerario_avanzado_reporte(estado: dict):
+    """R3/R5 - Generate the final report from the current advanced state."""
+    graph = get_graph()
+    try:
+        return generar_reporte_final(graph, estado)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))

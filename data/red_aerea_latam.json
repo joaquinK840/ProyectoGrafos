@@ -1,467 +1,119 @@
 {
-  "config": {
-    "aeronaves": {
-      "Avión Comercial": {"costoKm": 0.18, "tiempoKm": 0.7},
-      "Avión Regional":  {"costoKm": 0.25, "tiempoKm": 1.1},
-      "Hélice":          {"costoKm": 0.12, "tiempoKm": 2.5}
-    },
-    "presupuestoMinimoPorc": 35,
-    "intervaloAlojamiento": 20,
-    "intervaloAlimentacion": 8
+  "aeronaves": {
+    "Avion Comercial": {"costoKm": 0.18, "tiempoKm": 0.7},
+    "Avion Regional": {"costoKm": 0.25, "tiempoKm": 1.1},
+    "Helice": {"costoKm": 0.12, "tiempoKm": 2.5}
   },
+  "presupuestoMinimoPorc": 35,
+  "intervaloAlojamiento": 20,
+  "intervaloAlimentacion": 8,
+  "limiteSubsidioPorc": 20,
   "nodos": [
-    {
-      "id": "BOG", "nombre": "El Dorado", "ciudad": "Bogotá", "pais": "Colombia",
-      "zonaHoraria": "America/Bogota", "esHub": true, "aerolineas": ["Avianca", "LATAM"],
-      "costoAlojamiento": 45, "costoAlimentacion": 12,
-      "actividades": [
-        {"nombre": "Museo del Oro", "tipo": "opcional", "duracionMin": 120, "costoUSD": 5},
-        {"nombre": "Tour Monserrate", "tipo": "opcional", "duracionMin": 180, "costoUSD": 20}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 8.5, "maxHoras": 8},
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 12, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "MDE", "nombre": "José María Córdova", "ciudad": "Medellín", "pais": "Colombia",
-      "zonaHoraria": "America/Bogota", "esHub": false, "aerolineas": ["Avianca"],
-      "costoAlojamiento": 40, "costoAlimentacion": 10,
-      "actividades": [
-        {"nombre": "Parque Arví", "tipo": "opcional", "duracionMin": 240, "costoUSD": 15},
-        {"nombre": "Tour Comuna 13", "tipo": "opcional", "duracionMin": 150, "costoUSD": 10}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 9, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "CLO", "nombre": "Alfonso Bonilla Aragón", "ciudad": "Cali", "pais": "Colombia",
-      "zonaHoraria": "America/Bogota", "esHub": false, "aerolineas": ["Avianca"],
-      "costoAlojamiento": 35, "costoAlimentacion": 9,
-      "actividades": [
-        {"nombre": "Tour Salsa", "tipo": "opcional", "duracionMin": 120, "costoUSD": 12}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 7.5, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "CTG", "nombre": "Rafael Núñez", "ciudad": "Cartagena", "pais": "Colombia",
-      "zonaHoraria": "America/Bogota", "esHub": false, "aerolineas": ["Avianca"],
-      "costoAlojamiento": 55, "costoAlimentacion": 14,
-      "actividades": [
-        {"nombre": "Tour Ciudad Amurallada", "tipo": "opcional", "duracionMin": 180, "costoUSD": 18},
-        {"nombre": "Isla Barú", "tipo": "opcional", "duracionMin": 360, "costoUSD": 35}
-      ],
-      "trabajos": [
-        {"nombre": "Guía turístico", "tarifaHora": 10, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "LIM", "nombre": "Jorge Chávez", "ciudad": "Lima", "pais": "Perú",
-      "zonaHoraria": "America/Lima", "esHub": true, "aerolineas": ["LATAM", "Avianca"],
-      "costoAlojamiento": 50, "costoAlimentacion": 13,
-      "actividades": [
-        {"nombre": "Museo Larco", "tipo": "opcional", "duracionMin": 150, "costoUSD": 15},
-        {"nombre": "Tour Miraflores", "tipo": "opcional", "duracionMin": 120, "costoUSD": 8}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 7, "maxHoras": 8},
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 10, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "CUZ", "nombre": "Alejandro Velasco Astete", "ciudad": "Cusco", "pais": "Perú",
-      "zonaHoraria": "America/Lima", "esHub": false, "aerolineas": ["LATAM"],
-      "costoAlojamiento": 48, "costoAlimentacion": 11,
-      "actividades": [
-        {"nombre": "Machu Picchu", "tipo": "opcional", "duracionMin": 480, "costoUSD": 60},
-        {"nombre": "Tour Plaza de Armas", "tipo": "opcional", "duracionMin": 90, "costoUSD": 5}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 6.5, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "SCL", "nombre": "Arturo Merino Benítez", "ciudad": "Santiago", "pais": "Chile",
-      "zonaHoraria": "America/Santiago", "esHub": true, "aerolineas": ["LATAM", "Sky Airline"],
-      "costoAlojamiento": 60, "costoAlimentacion": 16,
-      "actividades": [
-        {"nombre": "Tour Viña del Mar", "tipo": "opcional", "duracionMin": 360, "costoUSD": 40},
-        {"nombre": "Cerro San Cristóbal", "tipo": "opcional", "duracionMin": 120, "costoUSD": 6}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 11, "maxHoras": 8},
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 14, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "PMC", "nombre": "El Tepual", "ciudad": "Puerto Montt", "pais": "Chile",
-      "zonaHoraria": "America/Santiago", "esHub": false, "aerolineas": ["LATAM", "Sky Airline"],
-      "costoAlojamiento": 50, "costoAlimentacion": 13,
-      "actividades": [
-        {"nombre": "Lago Llanquihue", "tipo": "opcional", "duracionMin": 240, "costoUSD": 20}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 9, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "EZE", "nombre": "Ministro Pistarini", "ciudad": "Buenos Aires", "pais": "Argentina",
-      "zonaHoraria": "America/Argentina/Buenos_Aires", "esHub": true, "aerolineas": ["Aerolíneas Argentinas", "LATAM"],
-      "costoAlojamiento": 55, "costoAlimentacion": 14,
-      "actividades": [
-        {"nombre": "Tour La Boca", "tipo": "opcional", "duracionMin": 180, "costoUSD": 10},
-        {"nombre": "Teatro Colón", "tipo": "opcional", "duracionMin": 120, "costoUSD": 25}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 9, "maxHoras": 8},
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 13, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "MDZ", "nombre": "El Plumerillo", "ciudad": "Mendoza", "pais": "Argentina",
-      "zonaHoraria": "America/Argentina/Mendoza", "esHub": false, "aerolineas": ["Aerolíneas Argentinas"],
-      "costoAlojamiento": 42, "costoAlimentacion": 11,
-      "actividades": [
-        {"nombre": "Tour Bodegas", "tipo": "opcional", "duracionMin": 300, "costoUSD": 35},
-        {"nombre": "Cerro Aconcagua vista", "tipo": "opcional", "duracionMin": 240, "costoUSD": 25}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 8, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "GRU", "nombre": "São Paulo/Guarulhos", "ciudad": "São Paulo", "pais": "Brasil",
-      "zonaHoraria": "America/Sao_Paulo", "esHub": true, "aerolineas": ["LATAM", "Gol", "Azul"],
-      "costoAlojamiento": 65, "costoAlimentacion": 18,
-      "actividades": [
-        {"nombre": "Museu do Ipiranga", "tipo": "opcional", "duracionMin": 150, "costoUSD": 8},
-        {"nombre": "Parque Ibirapuera", "tipo": "opcional", "duracionMin": 120, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 10, "maxHoras": 8},
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 15, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "GIG", "nombre": "Galeão", "ciudad": "Río de Janeiro", "pais": "Brasil",
-      "zonaHoraria": "America/Sao_Paulo", "esHub": true, "aerolineas": ["LATAM", "Gol"],
-      "costoAlojamiento": 70, "costoAlimentacion": 18,
-      "actividades": [
-        {"nombre": "Cristo Redentor", "tipo": "opcional", "duracionMin": 240, "costoUSD": 30},
-        {"nombre": "Playa de Copacabana", "tipo": "opcional", "duracionMin": 180, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 11, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "FOR", "nombre": "Pinto Martins", "ciudad": "Fortaleza", "pais": "Brasil",
-      "zonaHoraria": "America/Fortaleza", "esHub": false, "aerolineas": ["Gol", "Azul"],
-      "costoAlojamiento": 45, "costoAlimentacion": 12,
-      "actividades": [
-        {"nombre": "Praia do Futuro", "tipo": "opcional", "duracionMin": 180, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 8, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "UIO", "nombre": "Mariscal Sucre", "ciudad": "Quito", "pais": "Ecuador",
-      "zonaHoraria": "America/Guayaquil", "esHub": true, "aerolineas": ["LATAM", "Avianca"],
-      "costoAlojamiento": 42, "costoAlimentacion": 11,
-      "actividades": [
-        {"nombre": "Centro Histórico UNESCO", "tipo": "opcional", "duracionMin": 180, "costoUSD": 5},
-        {"nombre": "Teleférico Pichincha", "tipo": "opcional", "duracionMin": 150, "costoUSD": 12}
-      ],
-      "trabajos": [
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 9, "maxHoras": 6},
-        {"nombre": "Cargador de equipaje", "tarifaHora": 7, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "GYE", "nombre": "José Joaquín de Olmedo", "ciudad": "Guayaquil", "pais": "Ecuador",
-      "zonaHoraria": "America/Guayaquil", "esHub": false, "aerolineas": ["LATAM"],
-      "costoAlojamiento": 38, "costoAlimentacion": 10,
-      "actividades": [
-        {"nombre": "Malecón 2000", "tipo": "opcional", "duracionMin": 90, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 7, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "CCS", "nombre": "Simón Bolívar", "ciudad": "Caracas", "pais": "Venezuela",
-      "zonaHoraria": "America/Caracas", "esHub": true, "aerolineas": ["Conviasa"],
-      "costoAlojamiento": 30, "costoAlimentacion": 8,
-      "actividades": [
-        {"nombre": "Parque Nacional El Ávila", "tipo": "opcional", "duracionMin": 240, "costoUSD": 5}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 6, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "ASU", "nombre": "Silvio Pettirossi", "ciudad": "Asunción", "pais": "Paraguay",
-      "zonaHoraria": "America/Asuncion", "esHub": false, "aerolineas": ["LATAM"],
-      "costoAlojamiento": 35, "costoAlimentacion": 9,
-      "actividades": [
-        {"nombre": "Palacio de López", "tipo": "opcional", "duracionMin": 90, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 7, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "MVD", "nombre": "Carrasco", "ciudad": "Montevideo", "pais": "Uruguay",
-      "zonaHoraria": "America/Montevideo", "esHub": false, "aerolineas": ["Aerolíneas Argentinas", "LATAM"],
-      "costoAlojamiento": 58, "costoAlimentacion": 15,
-      "actividades": [
-        {"nombre": "Ciudad Vieja", "tipo": "opcional", "duracionMin": 120, "costoUSD": 0},
-        {"nombre": "Playa Pocitos", "tipo": "opcional", "duracionMin": 120, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 11, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "LPB", "nombre": "El Alto", "ciudad": "La Paz", "pais": "Bolivia",
-      "zonaHoraria": "America/La_Paz", "esHub": true, "aerolineas": ["Boliviana de Aviación"],
-      "costoAlojamiento": 32, "costoAlimentacion": 8,
-      "actividades": [
-        {"nombre": "Mercado de las Brujas", "tipo": "opcional", "duracionMin": 90, "costoUSD": 3},
-        {"nombre": "Valle de la Luna", "tipo": "opcional", "duracionMin": 180, "costoUSD": 8}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 6, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "VVI", "nombre": "Viru Viru", "ciudad": "Santa Cruz", "pais": "Bolivia",
-      "zonaHoraria": "America/La_Paz", "esHub": false, "aerolineas": ["Boliviana de Aviación"],
-      "costoAlojamiento": 30, "costoAlimentacion": 8,
-      "actividades": [
-        {"nombre": "Jardín Botánico", "tipo": "opcional", "duracionMin": 120, "costoUSD": 3}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 6, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "PTY", "nombre": "Tocumen", "ciudad": "Ciudad de Panamá", "pais": "Panamá",
-      "zonaHoraria": "America/Panama", "esHub": true, "aerolineas": ["Copa Airlines", "Avianca"],
-      "costoAlojamiento": 62, "costoAlimentacion": 16,
-      "actividades": [
-        {"nombre": "Canal de Panamá", "tipo": "opcional", "duracionMin": 240, "costoUSD": 20},
-        {"nombre": "Casco Antiguo", "tipo": "opcional", "duracionMin": 150, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 10, "maxHoras": 8},
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 14, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "SJO", "nombre": "Juan Santamaría", "ciudad": "San José", "pais": "Costa Rica",
-      "zonaHoraria": "America/Costa_Rica", "esHub": false, "aerolineas": ["Copa Airlines", "Avianca"],
-      "costoAlojamiento": 55, "costoAlimentacion": 14,
-      "actividades": [
-        {"nombre": "Volcán Poás", "tipo": "opcional", "duracionMin": 360, "costoUSD": 15},
-        {"nombre": "Teatro Nacional", "tipo": "opcional", "duracionMin": 90, "costoUSD": 8}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 9, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "GUA", "nombre": "La Aurora", "ciudad": "Ciudad de Guatemala", "pais": "Guatemala",
-      "zonaHoraria": "America/Guatemala", "esHub": false, "aerolineas": ["Copa Airlines"],
-      "costoAlojamiento": 48, "costoAlimentacion": 12,
-      "actividades": [
-        {"nombre": "Antigua Guatemala", "tipo": "opcional", "duracionMin": 300, "costoUSD": 10}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 8, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "SAL", "nombre": "Monseñor Óscar Romero", "ciudad": "San Salvador", "pais": "El Salvador",
-      "zonaHoraria": "America/El_Salvador", "esHub": false, "aerolineas": ["Copa Airlines"],
-      "costoAlojamiento": 40, "costoAlimentacion": 10,
-      "actividades": [
-        {"nombre": "Ruta de las Flores", "tipo": "opcional", "duracionMin": 300, "costoUSD": 15}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 7.5, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "HAV", "nombre": "José Martí", "ciudad": "La Habana", "pais": "Cuba",
-      "zonaHoraria": "America/Havana", "esHub": false, "aerolineas": ["Cubana"],
-      "costoAlojamiento": 45, "costoAlimentacion": 10,
-      "actividades": [
-        {"nombre": "Habana Vieja UNESCO", "tipo": "opcional", "duracionMin": 240, "costoUSD": 5},
-        {"nombre": "Tour clásicos americanos", "tipo": "opcional", "duracionMin": 180, "costoUSD": 30}
-      ],
-      "trabajos": [
-        {"nombre": "Guía turístico", "tarifaHora": 8, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "SDQ", "nombre": "Las Américas", "ciudad": "Santo Domingo", "pais": "Rep. Dominicana",
-      "zonaHoraria": "America/Santo_Domingo", "esHub": false, "aerolineas": ["Copa Airlines", "Avianca"],
-      "costoAlojamiento": 52, "costoAlimentacion": 13,
-      "actividades": [
-        {"nombre": "Zona Colonial UNESCO", "tipo": "opcional", "duracionMin": 180, "costoUSD": 5}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 8, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "MEX", "nombre": "Benito Juárez", "ciudad": "Ciudad de México", "pais": "México",
-      "zonaHoraria": "America/Mexico_City", "esHub": true, "aerolineas": ["Aeroméxico", "LATAM"],
-      "costoAlojamiento": 58, "costoAlimentacion": 14,
-      "actividades": [
-        {"nombre": "Teotihuacán", "tipo": "opcional", "duracionMin": 360, "costoUSD": 12},
-        {"nombre": "Museo Nacional de Antropología", "tipo": "opcional", "duracionMin": 180, "costoUSD": 8}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 9, "maxHoras": 8},
-        {"nombre": "Guía de aeropuerto", "tarifaHora": 13, "maxHoras": 6}
-      ]
-    },
-    {
-      "id": "CUN", "nombre": "Cancún", "ciudad": "Cancún", "pais": "México",
-      "zonaHoraria": "America/Cancun", "esHub": false, "aerolineas": ["Aeroméxico", "Volaris"],
-      "costoAlojamiento": 70, "costoAlimentacion": 18,
-      "actividades": [
-        {"nombre": "Chichén Itzá", "tipo": "opcional", "duracionMin": 480, "costoUSD": 25},
-        {"nombre": "Playa Delfines", "tipo": "opcional", "duracionMin": 120, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 10, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "MAO", "nombre": "Eduardo Gomes", "ciudad": "Manaos", "pais": "Brasil",
-      "zonaHoraria": "America/Manaus", "esHub": false, "aerolineas": ["Gol", "Azul"],
-      "costoAlojamiento": 40, "costoAlimentacion": 11,
-      "actividades": [
-        {"nombre": "Encuentro de las Aguas", "tipo": "opcional", "duracionMin": 240, "costoUSD": 20},
-        {"nombre": "Teatro Amazonas", "tipo": "opcional", "duracionMin": 120, "costoUSD": 10}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 8, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "BSB", "nombre": "Presidente Juscelino Kubitschek", "ciudad": "Brasilia", "pais": "Brasil",
-      "zonaHoraria": "America/Sao_Paulo", "esHub": false, "aerolineas": ["LATAM", "Gol"],
-      "costoAlojamiento": 55, "costoAlimentacion": 14,
-      "actividades": [
-        {"nombre": "Catedral de Brasilia", "tipo": "opcional", "duracionMin": 90, "costoUSD": 0},
-        {"nombre": "Congreso Nacional", "tipo": "opcional", "duracionMin": 120, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Asistente de rampa", "tarifaHora": 10, "maxHoras": 8}
-      ]
-    },
-    {
-      "id": "BEL", "nombre": "Val de Cans", "ciudad": "Belém", "pais": "Brasil",
-      "zonaHoraria": "America/Belem", "esHub": false, "aerolineas": ["Gol", "Azul"],
-      "costoAlojamiento": 38, "costoAlimentacion": 10,
-      "actividades": [
-        {"nombre": "Mercado Ver-o-Peso", "tipo": "opcional", "duracionMin": 120, "costoUSD": 0}
-      ],
-      "trabajos": [
-        {"nombre": "Cargador de equipaje", "tarifaHora": 7.5, "maxHoras": 8}
-      ]
-    }
+    {"id": "BOG", "nombre": "El Dorado", "ciudad": "Bogota", "pais": "Colombia", "zonaHoraria": "America/Bogota", "esHub": true, "aerolineas": ["Avianca", "LATAM", "Wingo"], "costoAlojamiento": 45, "costoAlimentacion": 12, "actividades": [{"nombre": "Museo del Oro", "tipo": "museo", "duracion_min": 120, "costo_usd": 6}], "trabajos": [{"nombre": "Cargador de equipaje", "tarifa_hora": 8.5, "max_horas": 8}, {"nombre": "Guia de aeropuerto", "tarifa_hora": 12, "max_horas": 6}]},
+    {"id": "MDE", "nombre": "Jose Maria Cordova", "ciudad": "Medellin", "pais": "Colombia", "zonaHoraria": "America/Bogota", "esHub": false, "aerolineas": ["Avianca", "JetSmart"], "costoAlojamiento": 40, "costoAlimentacion": 10, "actividades": [{"nombre": "Parque Arvi", "tipo": "cultural", "duracion_min": 240, "costo_usd": 15}], "trabajos": [{"nombre": "Asistente de rampa", "tarifa_hora": 9, "max_horas": 8}]},
+    {"id": "CTG", "nombre": "Rafael Nunez", "ciudad": "Cartagena", "pais": "Colombia", "zonaHoraria": "America/Bogota", "esHub": false, "aerolineas": ["Avianca", "Copa"], "costoAlojamiento": 48, "costoAlimentacion": 13, "actividades": [{"nombre": "Ciudad amurallada", "tipo": "tour", "duracion_min": 180, "costo_usd": 16}], "trabajos": [{"nombre": "Auxiliar turistico", "tarifa_hora": 8, "max_horas": 6}]},
+    {"id": "CLO", "nombre": "Alfonso Bonilla Aragon", "ciudad": "Cali", "pais": "Colombia", "zonaHoraria": "America/Bogota", "esHub": false, "aerolineas": ["Avianca"], "costoAlojamiento": 35, "costoAlimentacion": 9, "actividades": [{"nombre": "Ruta salsa", "tipo": "cultural", "duracion_min": 150, "costo_usd": 12}], "trabajos": [{"nombre": "Guia local", "tarifa_hora": 7.5, "max_horas": 6}]},
+    {"id": "LIM", "nombre": "Jorge Chavez", "ciudad": "Lima", "pais": "Peru", "zonaHoraria": "America/Lima", "esHub": true, "aerolineas": ["LATAM", "Sky Airline"], "costoAlojamiento": 50, "costoAlimentacion": 13, "actividades": [{"nombre": "Museo Larco", "tipo": "museo", "duracion_min": 150, "costo_usd": 15}], "trabajos": [{"nombre": "Cargador de equipaje", "tarifa_hora": 7, "max_horas": 8}, {"nombre": "Guia de aeropuerto", "tarifa_hora": 10, "max_horas": 6}]},
+    {"id": "CUZ", "nombre": "Alejandro Velasco Astete", "ciudad": "Cusco", "pais": "Peru", "zonaHoraria": "America/Lima", "esHub": false, "aerolineas": ["LATAM", "Sky Airline"], "costoAlojamiento": 42, "costoAlimentacion": 11, "actividades": [{"nombre": "Centro historico", "tipo": "cultural", "duracion_min": 210, "costo_usd": 18}], "trabajos": [{"nombre": "Asistente turistico", "tarifa_hora": 8, "max_horas": 6}]},
+    {"id": "UIO", "nombre": "Mariscal Sucre", "ciudad": "Quito", "pais": "Ecuador", "zonaHoraria": "America/Guayaquil", "esHub": true, "aerolineas": ["Avianca", "LATAM"], "costoAlojamiento": 38, "costoAlimentacion": 10, "actividades": [{"nombre": "Mitad del Mundo", "tipo": "tour", "duracion_min": 180, "costo_usd": 14}], "trabajos": [{"nombre": "Asistente de rampa", "tarifa_hora": 8, "max_horas": 8}]},
+    {"id": "GYE", "nombre": "Jose Joaquin de Olmedo", "ciudad": "Guayaquil", "pais": "Ecuador", "zonaHoraria": "America/Guayaquil", "esHub": false, "aerolineas": ["Avianca", "LATAM"], "costoAlojamiento": 36, "costoAlimentacion": 9, "actividades": [{"nombre": "Malecon 2000", "tipo": "tour", "duracion_min": 120, "costo_usd": 8}], "trabajos": [{"nombre": "Auxiliar de equipaje", "tarifa_hora": 7, "max_horas": 8}]},
+    {"id": "PTY", "nombre": "Tocumen", "ciudad": "Ciudad de Panama", "pais": "Panama", "zonaHoraria": "America/Panama", "esHub": true, "aerolineas": ["Copa Airlines"], "costoAlojamiento": 55, "costoAlimentacion": 14, "actividades": [{"nombre": "Canal de Panama", "tipo": "tour", "duracion_min": 210, "costo_usd": 25}], "trabajos": [{"nombre": "Asistente de conexion", "tarifa_hora": 11, "max_horas": 6}]},
+    {"id": "SJO", "nombre": "Juan Santamaria", "ciudad": "San Jose", "pais": "Costa Rica", "zonaHoraria": "America/Costa_Rica", "esHub": false, "aerolineas": ["Avianca", "Copa"], "costoAlojamiento": 58, "costoAlimentacion": 15, "actividades": [{"nombre": "Tour cafe", "tipo": "cultural", "duracion_min": 180, "costo_usd": 22}], "trabajos": [{"nombre": "Guia de aeropuerto", "tarifa_hora": 10, "max_horas": 6}]},
+    {"id": "SAL", "nombre": "San Oscar Romero", "ciudad": "San Salvador", "pais": "El Salvador", "zonaHoraria": "America/El_Salvador", "esHub": false, "aerolineas": ["Avianca"], "costoAlojamiento": 34, "costoAlimentacion": 9, "actividades": [{"nombre": "Centro historico", "tipo": "cultural", "duracion_min": 150, "costo_usd": 10}], "trabajos": [{"nombre": "Auxiliar de abordaje", "tarifa_hora": 7.5, "max_horas": 7}]},
+    {"id": "GUA", "nombre": "La Aurora", "ciudad": "Ciudad de Guatemala", "pais": "Guatemala", "zonaHoraria": "America/Guatemala", "esHub": false, "aerolineas": ["Avianca", "Copa"], "costoAlojamiento": 33, "costoAlimentacion": 9, "actividades": [{"nombre": "Antigua Guatemala", "tipo": "tour", "duracion_min": 240, "costo_usd": 24}], "trabajos": [{"nombre": "Asistente logistico", "tarifa_hora": 8, "max_horas": 7}]},
+    {"id": "MEX", "nombre": "Benito Juarez", "ciudad": "Ciudad de Mexico", "pais": "Mexico", "zonaHoraria": "America/Mexico_City", "esHub": true, "aerolineas": ["Aeromexico", "Volaris"], "costoAlojamiento": 52, "costoAlimentacion": 13, "actividades": [{"nombre": "Museo Nacional", "tipo": "museo", "duracion_min": 180, "costo_usd": 16}], "trabajos": [{"nombre": "Cargador de equipaje", "tarifa_hora": 9.5, "max_horas": 8}]},
+    {"id": "CUN", "nombre": "Cancun", "ciudad": "Cancun", "pais": "Mexico", "zonaHoraria": "America/Cancun", "esHub": false, "aerolineas": ["Volaris", "Aeromexico"], "costoAlojamiento": 65, "costoAlimentacion": 17, "actividades": [{"nombre": "Zona hotelera", "tipo": "tour", "duracion_min": 180, "costo_usd": 28}], "trabajos": [{"nombre": "Auxiliar turistico", "tarifa_hora": 9, "max_horas": 6}]},
+    {"id": "HAV", "nombre": "Jose Marti", "ciudad": "La Habana", "pais": "Cuba", "zonaHoraria": "America/Havana", "esHub": false, "aerolineas": ["Cubana", "Copa"], "costoAlojamiento": 37, "costoAlimentacion": 10, "actividades": [{"nombre": "Habana Vieja", "tipo": "cultural", "duracion_min": 210, "costo_usd": 18}], "trabajos": [{"nombre": "Guia de terminal", "tarifa_hora": 7, "max_horas": 6}]},
+    {"id": "SDQ", "nombre": "Las Americas", "ciudad": "Santo Domingo", "pais": "Republica Dominicana", "zonaHoraria": "America/Santo_Domingo", "esHub": false, "aerolineas": ["Arajet", "Copa"], "costoAlojamiento": 46, "costoAlimentacion": 12, "actividades": [{"nombre": "Zona colonial", "tipo": "tour", "duracion_min": 180, "costo_usd": 14}], "trabajos": [{"nombre": "Asistente de rampa", "tarifa_hora": 8, "max_horas": 8}]},
+    {"id": "SJU", "nombre": "Luis Munoz Marin", "ciudad": "San Juan", "pais": "Puerto Rico", "zonaHoraria": "America/Puerto_Rico", "esHub": false, "aerolineas": ["JetBlue", "Copa"], "costoAlojamiento": 72, "costoAlimentacion": 18, "actividades": [{"nombre": "Viejo San Juan", "tipo": "cultural", "duracion_min": 180, "costo_usd": 20}], "trabajos": [{"nombre": "Auxiliar de equipaje", "tarifa_hora": 12, "max_horas": 6}]},
+    {"id": "CCS", "nombre": "Simon Bolivar", "ciudad": "Caracas", "pais": "Venezuela", "zonaHoraria": "America/Caracas", "esHub": false, "aerolineas": ["Conviasa", "Copa"], "costoAlojamiento": 32, "costoAlimentacion": 8, "actividades": [{"nombre": "Avila", "tipo": "tour", "duracion_min": 210, "costo_usd": 12}], "trabajos": [{"nombre": "Asistente operativo", "tarifa_hora": 7, "max_horas": 8}]},
+    {"id": "SCL", "nombre": "Arturo Merino Benitez", "ciudad": "Santiago", "pais": "Chile", "zonaHoraria": "America/Santiago", "esHub": true, "aerolineas": ["LATAM", "Sky Airline"], "costoAlojamiento": 60, "costoAlimentacion": 16, "actividades": [{"nombre": "Tour Vina del Mar", "tipo": "tour", "duracion_min": 360, "costo_usd": 40}], "trabajos": [{"nombre": "Asistente de rampa", "tarifa_hora": 11, "max_horas": 8}]},
+    {"id": "ANF", "nombre": "Andres Sabella", "ciudad": "Antofagasta", "pais": "Chile", "zonaHoraria": "America/Santiago", "esHub": false, "aerolineas": ["LATAM", "Sky Airline"], "costoAlojamiento": 54, "costoAlimentacion": 14, "actividades": [{"nombre": "Mano del desierto", "tipo": "tour", "duracion_min": 180, "costo_usd": 22}], "trabajos": [{"nombre": "Auxiliar logistico", "tarifa_hora": 10, "max_horas": 7}]},
+    {"id": "EZE", "nombre": "Ministro Pistarini", "ciudad": "Buenos Aires", "pais": "Argentina", "zonaHoraria": "America/Argentina/Buenos_Aires", "esHub": true, "aerolineas": ["Aerolineas Argentinas", "LATAM"], "costoAlojamiento": 48, "costoAlimentacion": 12, "actividades": [{"nombre": "Teatro Colon", "tipo": "cultural", "duracion_min": 150, "costo_usd": 18}], "trabajos": [{"nombre": "Guia de aeropuerto", "tarifa_hora": 9, "max_horas": 6}]},
+    {"id": "COR", "nombre": "Ingeniero Taravella", "ciudad": "Cordoba", "pais": "Argentina", "zonaHoraria": "America/Argentina/Cordoba", "esHub": false, "aerolineas": ["Aerolineas Argentinas"], "costoAlojamiento": 38, "costoAlimentacion": 10, "actividades": [{"nombre": "Manzana Jesuitica", "tipo": "cultural", "duracion_min": 180, "costo_usd": 12}], "trabajos": [{"nombre": "Auxiliar de terminal", "tarifa_hora": 8, "max_horas": 7}]},
+    {"id": "MVD", "nombre": "Carrasco", "ciudad": "Montevideo", "pais": "Uruguay", "zonaHoraria": "America/Montevideo", "esHub": false, "aerolineas": ["LATAM", "Aerolineas Argentinas"], "costoAlojamiento": 50, "costoAlimentacion": 14, "actividades": [{"nombre": "Ciudad Vieja", "tipo": "tour", "duracion_min": 150, "costo_usd": 12}], "trabajos": [{"nombre": "Asistente de rampa", "tarifa_hora": 9.5, "max_horas": 7}]},
+    {"id": "ASU", "nombre": "Silvio Pettirossi", "ciudad": "Asuncion", "pais": "Paraguay", "zonaHoraria": "America/Asuncion", "esHub": false, "aerolineas": ["Paranair", "LATAM"], "costoAlojamiento": 32, "costoAlimentacion": 8, "actividades": [{"nombre": "Costanera", "tipo": "tour", "duracion_min": 120, "costo_usd": 8}], "trabajos": [{"nombre": "Auxiliar operativo", "tarifa_hora": 7, "max_horas": 8}]},
+    {"id": "GRU", "nombre": "Guarulhos", "ciudad": "Sao Paulo", "pais": "Brasil", "zonaHoraria": "America/Sao_Paulo", "esHub": true, "aerolineas": ["LATAM", "GOL", "Azul"], "costoAlojamiento": 56, "costoAlimentacion": 15, "actividades": [{"nombre": "Avenida Paulista", "tipo": "tour", "duracion_min": 150, "costo_usd": 10}], "trabajos": [{"nombre": "Cargador de equipaje", "tarifa_hora": 10, "max_horas": 8}]},
+    {"id": "GIG", "nombre": "Galeao", "ciudad": "Rio de Janeiro", "pais": "Brasil", "zonaHoraria": "America/Sao_Paulo", "esHub": true, "aerolineas": ["LATAM", "GOL"], "costoAlojamiento": 62, "costoAlimentacion": 16, "actividades": [{"nombre": "Cristo Redentor", "tipo": "tour", "duracion_min": 240, "costo_usd": 32}], "trabajos": [{"nombre": "Guia de aeropuerto", "tarifa_hora": 10, "max_horas": 6}]},
+    {"id": "BSB", "nombre": "Presidente Juscelino Kubitschek", "ciudad": "Brasilia", "pais": "Brasil", "zonaHoraria": "America/Sao_Paulo", "esHub": false, "aerolineas": ["LATAM", "GOL"], "costoAlojamiento": 48, "costoAlimentacion": 13, "actividades": [{"nombre": "Eje monumental", "tipo": "cultural", "duracion_min": 180, "costo_usd": 14}], "trabajos": [{"nombre": "Asistente logistico", "tarifa_hora": 9, "max_horas": 7}]},
+    {"id": "VVI", "nombre": "Viru Viru", "ciudad": "Santa Cruz", "pais": "Bolivia", "zonaHoraria": "America/La_Paz", "esHub": false, "aerolineas": ["BoA", "LATAM"], "costoAlojamiento": 30, "costoAlimentacion": 8, "actividades": [{"nombre": "Plaza 24 de Septiembre", "tipo": "tour", "duracion_min": 120, "costo_usd": 7}], "trabajos": [{"nombre": "Auxiliar de rampa", "tarifa_hora": 6.5, "max_horas": 8}]},
+    {"id": "LPB", "nombre": "El Alto", "ciudad": "La Paz", "pais": "Bolivia", "zonaHoraria": "America/La_Paz", "esHub": false, "aerolineas": ["BoA"], "costoAlojamiento": 28, "costoAlimentacion": 7, "actividades": [{"nombre": "Valle de la Luna", "tipo": "tour", "duracion_min": 180, "costo_usd": 10}], "trabajos": [{"nombre": "Asistente de terminal", "tarifa_hora": 6.5, "max_horas": 8}]},
+    {"id": "JFK", "nombre": "John F. Kennedy", "ciudad": "Nueva York", "pais": "Estados Unidos", "zonaHoraria": "America/New_York", "esHub": true, "aerolineas": ["American Airlines", "Delta", "JetBlue"], "costoAlojamiento": 95, "costoAlimentacion": 24, "actividades": [{"nombre": "Museo metropolitano", "tipo": "museo", "duracion_min": 180, "costo_usd": 30}], "trabajos": [{"nombre": "Asistente de conexion", "tarifa_hora": 16, "max_horas": 5}]}
   ],
   "aristas": [
-    {"origen": "BOG", "destino": "MDE", "distanciaKm": 230,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "MDE", "destino": "BOG", "distanciaKm": 230,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "BOG", "destino": "CLO", "distanciaKm": 390,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "CLO", "destino": "BOG", "distanciaKm": 390,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "BOG", "destino": "CTG", "distanciaKm": 650,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "CTG", "destino": "BOG", "distanciaKm": 650,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "BOG", "destino": "UIO", "distanciaKm": 730,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "UIO", "destino": "BOG", "distanciaKm": 730,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "BOG", "destino": "PTY", "distanciaKm": 670,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "PTY", "destino": "BOG", "distanciaKm": 670,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "BOG", "destino": "LIM", "distanciaKm": 1900, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "LIM", "destino": "BOG", "distanciaKm": 1900, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "BOG", "destino": "CCS", "distanciaKm": 1060, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "CCS", "destino": "BOG", "distanciaKm": 1060, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "BOG", "destino": "MEX", "distanciaKm": 2760, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 240},
-    {"origen": "MEX", "destino": "BOG", "distanciaKm": 2760, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 240},
-    {"origen": "UIO", "destino": "GYE", "distanciaKm": 280,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "GYE", "destino": "UIO", "distanciaKm": 280,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "UIO", "destino": "LIM", "distanciaKm": 1560, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "LIM", "destino": "UIO", "distanciaKm": 1560, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "LIM", "destino": "CUZ", "distanciaKm": 600,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "CUZ", "destino": "LIM", "distanciaKm": 600,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "LIM", "destino": "SCL", "distanciaKm": 2450, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "SCL", "destino": "LIM", "distanciaKm": 2450, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "LIM", "destino": "LPB", "distanciaKm": 1050, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "LPB", "destino": "LIM", "distanciaKm": 1050, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "LIM", "destino": "GRU", "distanciaKm": 3700, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 240},
-    {"origen": "GRU", "destino": "LIM", "distanciaKm": 3700, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 240},
-    {"origen": "SCL", "destino": "EZE", "distanciaKm": 1130, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "EZE", "destino": "SCL", "distanciaKm": 1130, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "SCL", "destino": "PMC", "distanciaKm": 1010, "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "PMC", "destino": "SCL", "distanciaKm": 1010, "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "EZE", "destino": "GRU", "distanciaKm": 1760, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "GRU", "destino": "EZE", "distanciaKm": 1760, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "EZE", "destino": "MVD", "distanciaKm": 220,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "MVD", "destino": "EZE", "distanciaKm": 220,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "EZE", "destino": "MDZ", "distanciaKm": 1040, "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "MDZ", "destino": "EZE", "distanciaKm": 1040, "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "EZE", "destino": "ASU", "distanciaKm": 1370, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "ASU", "destino": "EZE", "distanciaKm": 1370, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "GRU", "destino": "GIG", "distanciaKm": 360,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "GIG", "destino": "GRU", "distanciaKm": 360,  "aeronaves": ["Avión Comercial", "Avión Regional"], "costoBase": -1, "estanciaMinima": 60},
-    {"origen": "GRU", "destino": "FOR", "distanciaKm": 2700, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "FOR", "destino": "GRU", "distanciaKm": 2700, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "GRU", "destino": "MAO", "distanciaKm": 2690, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "MAO", "destino": "GRU", "distanciaKm": 2690, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "GRU", "destino": "BSB", "distanciaKm": 870,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "BSB", "destino": "GRU", "distanciaKm": 870,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "GRU", "destino": "BEL", "distanciaKm": 2500, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "BEL", "destino": "GRU", "distanciaKm": 2500, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "LPB", "destino": "VVI", "distanciaKm": 870,  "aeronaves": ["Avión Regional", "Hélice"],         "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "VVI", "destino": "LPB", "distanciaKm": 870,  "aeronaves": ["Avión Regional", "Hélice"],         "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "VVI", "destino": "ASU", "distanciaKm": 1380, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "ASU", "destino": "VVI", "distanciaKm": 1380, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "PTY", "destino": "SJO", "distanciaKm": 660,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "SJO", "destino": "PTY", "distanciaKm": 660,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "PTY", "destino": "GUA", "distanciaKm": 870,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "GUA", "destino": "PTY", "distanciaKm": 870,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "PTY", "destino": "SAL", "distanciaKm": 720,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "SAL", "destino": "PTY", "distanciaKm": 720,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "PTY", "destino": "HAV", "distanciaKm": 1840, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "HAV", "destino": "PTY", "distanciaKm": 1840, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "PTY", "destino": "SDQ", "distanciaKm": 1500, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 150},
-    {"origen": "SDQ", "destino": "PTY", "distanciaKm": 1500, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 150},
-    {"origen": "MEX", "destino": "CUN", "distanciaKm": 1550, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "CUN", "destino": "MEX", "distanciaKm": 1550, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "MEX", "destino": "GUA", "distanciaKm": 1050, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "GUA", "destino": "MEX", "distanciaKm": 1050, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 120},
-    {"origen": "MEX", "destino": "HAV", "distanciaKm": 1700, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "HAV", "destino": "MEX", "distanciaKm": 1700, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 180},
-    {"origen": "CCS", "destino": "SDQ", "distanciaKm": 1650, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 150},
-    {"origen": "SDQ", "destino": "CCS", "distanciaKm": 1650, "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 150},
-    {"origen": "GIG", "destino": "BSB", "distanciaKm": 930,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "BSB", "destino": "GIG", "distanciaKm": 930,  "aeronaves": ["Avión Comercial"],                  "costoBase": -1, "estanciaMinima": 90},
-    {"origen": "FOR", "destino": "BEL", "distanciaKm": 1610, "aeronaves": ["Avión Comercial"],                  "costoBase":  0, "estanciaMinima": 150},
-    {"origen": "BEL", "destino": "FOR", "distanciaKm": 1610, "aeronaves": ["Avión Comercial"],                  "costoBase":  0, "estanciaMinima": 150},
-    {"origen": "MAO", "destino": "BEL", "distanciaKm": 1300, "aeronaves": ["Avión Regional", "Hélice"],         "costoBase":  0, "estanciaMinima": 120},
-    {"origen": "BEL", "destino": "MAO", "distanciaKm": 1300, "aeronaves": ["Avión Regional", "Hélice"],         "costoBase":  0, "estanciaMinima": 120},
-    {"origen": "CLO", "destino": "GYE", "distanciaKm": 520,  "aeronaves": ["Avión Regional", "Hélice"],         "costoBase": -1, "estanciaMinima": 75},
-    {"origen": "GYE", "destino": "CLO", "distanciaKm": 520,  "aeronaves": ["Avión Regional", "Hélice"],         "costoBase": -1, "estanciaMinima": 75},
-    {"origen": "MDE", "destino": "CTG", "distanciaKm": 440,  "aeronaves": ["Avión Regional"],                   "costoBase": -1, "estanciaMinima": 75},
-    {"origen": "CTG", "destino": "MDE", "distanciaKm": 440,  "aeronaves": ["Avión Regional"],                   "costoBase": -1, "estanciaMinima": 75}
+    {"origen": "BOG", "destino": "MDE", "distanciaKm": 240, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "MDE", "destino": "BOG", "distanciaKm": 240, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "BOG", "destino": "CTG", "distanciaKm": 670, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "CTG", "destino": "BOG", "distanciaKm": 670, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "BOG", "destino": "CLO", "distanciaKm": 300, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "CLO", "destino": "BOG", "distanciaKm": 300, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "BOG", "destino": "LIM", "distanciaKm": 1900, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "LIM", "destino": "BOG", "distanciaKm": 1900, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "BOG", "destino": "UIO", "distanciaKm": 720, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "UIO", "destino": "BOG", "distanciaKm": 720, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "BOG", "destino": "PTY", "distanciaKm": 730, "aeronaves": ["Avion Comercial"], "costoBase": 0, "estanciaMinima": 120},
+    {"origen": "PTY", "destino": "BOG", "distanciaKm": 730, "aeronaves": ["Avion Comercial"], "costoBase": 0, "estanciaMinima": 120},
+    {"origen": "BOG", "destino": "CCS", "distanciaKm": 870, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "CCS", "destino": "BOG", "distanciaKm": 870, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "LIM", "destino": "CUZ", "distanciaKm": 590, "aeronaves": ["Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "CUZ", "destino": "LIM", "distanciaKm": 590, "aeronaves": ["Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "LIM", "destino": "SCL", "distanciaKm": 2460, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "SCL", "destino": "LIM", "distanciaKm": 2460, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "LIM", "destino": "EZE", "distanciaKm": 3150, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "EZE", "destino": "LIM", "distanciaKm": 3150, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "LIM", "destino": "UIO", "distanciaKm": 1500, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "UIO", "destino": "LIM", "distanciaKm": 1500, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "UIO", "destino": "GYE", "distanciaKm": 280, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "GYE", "destino": "UIO", "distanciaKm": 280, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "GYE", "destino": "LIM", "distanciaKm": 1340, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "LIM", "destino": "GYE", "distanciaKm": 1340, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "PTY", "destino": "SJO", "distanciaKm": 540, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "SJO", "destino": "PTY", "distanciaKm": 540, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "SJO", "destino": "SAL", "distanciaKm": 650, "aeronaves": ["Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "SAL", "destino": "SJO", "distanciaKm": 650, "aeronaves": ["Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "SAL", "destino": "GUA", "distanciaKm": 200, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "GUA", "destino": "SAL", "distanciaKm": 200, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 60},
+    {"origen": "GUA", "destino": "MEX", "distanciaKm": 1060, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "MEX", "destino": "GUA", "distanciaKm": 1060, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "MEX", "destino": "CUN", "distanciaKm": 1290, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "CUN", "destino": "MEX", "distanciaKm": 1290, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "MEX", "destino": "HAV", "distanciaKm": 1550, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "HAV", "destino": "MEX", "distanciaKm": 1550, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "HAV", "destino": "SDQ", "distanciaKm": 1390, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "SDQ", "destino": "HAV", "distanciaKm": 1390, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "SDQ", "destino": "SJU", "distanciaKm": 390, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "SJU", "destino": "SDQ", "distanciaKm": 390, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "SCL", "destino": "ANF", "distanciaKm": 1110, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "ANF", "destino": "SCL", "distanciaKm": 1110, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "SCL", "destino": "EZE", "distanciaKm": 1400, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "EZE", "destino": "SCL", "distanciaKm": 1400, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "EZE", "destino": "COR", "distanciaKm": 650, "aeronaves": ["Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "COR", "destino": "EZE", "distanciaKm": 650, "aeronaves": ["Avion Regional"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "EZE", "destino": "MVD", "distanciaKm": 400, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "MVD", "destino": "EZE", "distanciaKm": 400, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "EZE", "destino": "ASU", "distanciaKm": 1320, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "ASU", "destino": "EZE", "distanciaKm": 1320, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "ASU", "destino": "GRU", "distanciaKm": 1530, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "GRU", "destino": "ASU", "distanciaKm": 1530, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "GRU", "destino": "GIG", "distanciaKm": 340, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "GIG", "destino": "GRU", "distanciaKm": 340, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "GRU", "destino": "BSB", "distanciaKm": 870, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "BSB", "destino": "GRU", "distanciaKm": 870, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 120},
+    {"origen": "GRU", "destino": "VVI", "distanciaKm": 2830, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "VVI", "destino": "GRU", "distanciaKm": 2830, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "VVI", "destino": "LPB", "distanciaKm": 550, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "LPB", "destino": "VVI", "distanciaKm": 550, "aeronaves": ["Avion Regional", "Helice"], "costoBase": -1, "estanciaMinima": 90},
+    {"origen": "LPB", "destino": "LIM", "distanciaKm": 1080, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "LIM", "destino": "LPB", "distanciaKm": 1080, "aeronaves": ["Avion Comercial", "Avion Regional"], "costoBase": -1, "estanciaMinima": 150},
+    {"origen": "GRU", "destino": "SCL", "distanciaKm": 2610, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "SCL", "destino": "GRU", "distanciaKm": 2610, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "GRU", "destino": "LIM", "distanciaKm": 3720, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "LIM", "destino": "GRU", "distanciaKm": 3720, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "JFK", "destino": "MEX", "distanciaKm": 3370, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "MEX", "destino": "JFK", "distanciaKm": 3370, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "JFK", "destino": "BOG", "distanciaKm": 3960, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "BOG", "destino": "JFK", "distanciaKm": 3960, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "JFK", "destino": "SJU", "distanciaKm": 2580, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180},
+    {"origen": "SJU", "destino": "JFK", "distanciaKm": 2580, "aeronaves": ["Avion Comercial"], "costoBase": -1, "estanciaMinima": 180}
   ]
 }

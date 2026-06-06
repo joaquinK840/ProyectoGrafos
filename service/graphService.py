@@ -59,6 +59,13 @@ def build_airport_graph(data: dict) -> Directed_Graph:
     Extends build_graph() without modifying it (OCP).
     """
     graph = Directed_Graph()
+    graph.aircraft_config = data.get("aeronaves", {})
+    graph.global_config = {
+        "presupuestoMinimoPorc": data.get("presupuestoMinimoPorc", 35),
+        "intervaloAlojamiento": data.get("intervaloAlojamiento", 20),
+        "intervaloAlimentacion": data.get("intervaloAlimentacion", 8),
+        "limiteSubsidioPorc": data.get("limiteSubsidioPorc", 20),
+    }
 
     # Merge aircraft config: defaults + any overrides from JSON
     config = data.get("config", {})
@@ -148,4 +155,12 @@ def serialize_airport_graph(graph) -> dict:
                 })
             aristas.append(arista)
 
-    return {"nodos": nodos, "aristas": aristas}
+    return {
+        "directed": True,
+        "aeronaves": getattr(graph, "aircraft_config", {}),
+        "configuracion": getattr(graph, "global_config", {}),
+        "nodos": nodos,
+        "aristas": aristas,
+        "total_nodos": len(nodos),
+        "total_aristas": len(aristas),
+    }
