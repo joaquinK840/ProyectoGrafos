@@ -1,3 +1,4 @@
+
 from core.graph.undirected_graph import Undirected_graph
 from core.vertex.vertex import Vertex
 from core.edge.edge import Edge
@@ -68,7 +69,7 @@ def build_airport_graph(data: dict) -> Directed_Graph:
     }
 
     # Merge aircraft config: defaults + any overrides from JSON
-    config = data.get("config", {})
+    config = data.get("config") or {}
     aircraft_config = AIRCRAFT_DEFAULTS.copy()
     for tipo, valores in config.get("aeronaves", {}).items():
         base = aircraft_config.get(tipo, {})

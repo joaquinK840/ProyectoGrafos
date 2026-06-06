@@ -1,22 +1,25 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict 
 from schemas.edgeSchema import EdgePayload
 
 
 # ── Submodelos de nodo ──────────────────────────────────────────────────
 
 class ActividadSchema(BaseModel):
+    model_config = ConfigDict(extra="allow")
     nombre: str
-    tipo: str                  # "obligatoria" | "opcional"
-    duracionMin: int
-    costoUSD: float
+    tipo: str
+    duracion_min: int = 0
+    costo_usd: float = 0.0
 
 class TrabajoSchema(BaseModel):
+    model_config = ConfigDict(extra="allow")
     nombre: str
-    tarifaHora: float
-    maxHoras: int
+    tarifa_hora: float = 0.0
+    max_horas: int = 8
 
 class AirportVertexPayload(BaseModel):
+    model_config = ConfigDict(extra="allow")
     id: str
     nombre: str
     ciudad: str
@@ -28,36 +31,21 @@ class AirportVertexPayload(BaseModel):
     actividades: list[ActividadSchema] = Field(default_factory=list)
     trabajos: list[TrabajoSchema] = Field(default_factory=list)
 
-# ── Submodelos de arista ────────────────────────────────────────────────
-
 class AirportEdgePayload(BaseModel):
     origen: str
     destino: str
     distanciaKm: float
     aeronaves: list[str]
-    costoBase: float = 0.0
+    costoBase: float = -1.0   # ← también cambia default a -1.0, el JSON usa -1
     estanciaMinima: int = 0
 
-# ── Configuración global ────────────────────────────────────────────────
-
-class AircraftConfigSchema(BaseModel):
-    costoKm: float
-    tiempoKm: float
-
-class GlobalConfigSchema(BaseModel):
-    aeronaves: dict[str, AircraftConfigSchema] = Field(default_factory=dict)
-    presupuestoMinimoPorc: float = 35.0
-    intervaloAlojamiento: float = 20.0
-    intervaloAlimentacion: float = 8.0
-
-# ── Payloads principales (van al final, usan todo lo anterior) ──────────
+class AirportGraphPayload(BaseModel):
+    model_config = ConfigDict(extra="allow")  # ← ignora aeronaves/config sin explotar
+    nodos: list[AirportVertexPayload]
+    aristas: list[AirportEdgePayload]
+    config: Optional[dict] = None
 
 class GraphPayload(BaseModel):
     directed: bool = True
     vertices: list[str]
     edges: list[EdgePayload] = Field(default_factory=list)
-
-class AirportGraphPayload(BaseModel):
-    nodos: list[AirportVertexPayload]
-    aristas: list[AirportEdgePayload]
-    config: Optional[GlobalConfigSchema] = None
