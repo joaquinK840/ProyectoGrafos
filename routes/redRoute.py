@@ -172,19 +172,41 @@ def bloquear_y_recalcular(payload: dict):
     }
 
 
-@router.put("/desbloquear")
-def desbloquear_ruta(origen: str, destino: str):
-    """R4 - Unblock a route and return the updated graph."""
+@router.put("/bloquear")
+def bloquear_ruta(
+    origen: str,
+    destino: str,
+    recalcular_desde: str | None = None,
+    criterio: str = "distancia",
+):
+    """R4 - Block a route and return the updated graph."""
     graph = get_graph()
     origen, destino = origen.upper(), destino.upper()
     edge = _find_edge(graph, origen, destino)
-    edge.set_available(True)
-    return {
-        "message": f"Ruta {origen} -> {destino} desbloqueada",
-        "ruta": {"origen": origen, "destino": destino, "disponible": True},
+    edge.set_available(False)
+
+    response = {
+        "message": f"Ruta {origen} -> {destino} bloqueada",
+        "ruta": {"origen": origen, "destino": destino, "disponible": False},
         "grafo": serialize_airport_graph(graph),
     }
 
+    if recalcular_desde:
+        from algorithms.dijkstra import dijkstra, reconstruir_camino
+        recalcular_desde = recalcular_desde.upper()
+        try:
+            distancias, previos = dijkstra(graph, recalcular_desde, criterio)
+            camino_alternativo = reconstruir_camino(previos, recalcular_desde, destino)
+            response["ruta_alternativa"] = {
+                "criterio": criterio,
+                "camino": camino_alternativo,
+                "costo_total": distancias.get(destino, float("inf")),
+            }
+        except ValueError:
+            response["ruta_alternativa"] = None
+        response["rutas_disponibles_desde"] = _available_routes_from(graph, recalcular_desde)
+
+    return response
 
 @router.get("/disponibles")
 def rutas_disponibles(origen: str):
