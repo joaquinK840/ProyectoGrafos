@@ -565,14 +565,14 @@ def _costos_obligatorios_en_aeropuerto(graph, vertex, estado, duracion):
 def _serializar_aeropuerto(vertex):
     return {
         "id": vertex.get_name(),
-        "nombre": vertex.get_nombre_completo(),
-        "ciudad": vertex.get_ciudad(),
-        "pais": vertex.get_pais(),
-        "zona_horaria": vertex.get_zona_horaria(),
-        "es_hub": vertex.is_hub(),
-        "aerolineas": vertex.get_aerolineas(),
-        "costo_alojamiento": vertex.get_costo_alojamiento(),
-        "costo_alimentacion": vertex.get_costo_alimentacion(),
+        "nombre": getattr(vertex, "nombre", vertex.get_name()),
+        "ciudad": getattr(vertex, "ciudad", ""),
+        "pais": getattr(vertex, "pais", ""),
+        "zona_horaria": getattr(vertex, "zona_horaria", ""),
+        "es_hub": getattr(vertex, "es_hub", False),
+        "aerolineas": getattr(vertex, "aerolineas", []),
+        "costo_alojamiento": getattr(vertex, "costo_alojamiento", 0.0),
+        "costo_alimentacion": getattr(vertex, "costo_alimentacion", 0.0),
     }
 
 

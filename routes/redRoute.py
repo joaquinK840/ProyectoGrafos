@@ -94,23 +94,6 @@ def _redirect_to_route_origin(estado, origen, destino):
     return estado
 
 
-@router.put("/bloquear")
-def bloquear_ruta(origen: str, destino: str, recalcular_desde: str | None = None):
-    """R4 - Block a route and return the updated graph."""
-    graph = get_graph()
-    origen, destino = origen.upper(), destino.upper()
-    edge = _find_edge(graph, origen, destino)
-    edge.set_available(False)
-
-    response = {
-        "message": f"Ruta {origen} -> {destino} bloqueada",
-        "ruta": {"origen": origen, "destino": destino, "disponible": False},
-        "grafo": serialize_airport_graph(graph),
-    }
-    if recalcular_desde:
-        response["rutas_disponibles_desde"] = _available_routes_from(graph, recalcular_desde.upper())
-    return response
-
 
 @router.post("/bloquear-recalcular")
 def bloquear_y_recalcular(payload: dict):
