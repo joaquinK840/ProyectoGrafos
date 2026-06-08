@@ -163,6 +163,12 @@ def crear_estado_planificacion(
         "actividades_realizadas": [],
         "trabajos_realizados": [],
         "costos_obligatorios": [],
+        # Accumulated subsidized km used so far — enforces the global subsidy cap.
+        "km_subsidiados_total": 0.0,
+        # Total distance flown so far — used to compute the cap denominator.
+        "distancia_total_km": 0.0,
+        # estancia_minima of the edge that brought us HERE — used to compute tiempo_libre on next departure.
+        "estancia_minima_pendiente": 0.0,
     }
 
 
@@ -211,15 +217,23 @@ def generar_reporte_final(graph, estado: dict) -> dict:
     """Build the R5-compatible report from the R3 state."""
     estado = _normalizar_estado(estado)
     destinos = []
+    
+    # Inyectar los costos obligatorios en la lista de actividades visual
+    todas_actividades = list(estado["actividades_realizadas"])
+    for costo_obl in estado["costos_obligatorios"]:
+        todas_actividades.append({
+            "aeropuerto": costo_obl["aeropuerto"],
+            "nombre": costo_obl["tipo"].capitalize(), # "Alojamiento" o "Alimentacion"
+            "tipo": "obligatoria",
+            "duracion_min": 0,
+            "costo": costo_obl["costo"]
+        })
+
     for airport_id in estado["visitados"]:
         vertex = graph.vertices.get(airport_id)
         if not vertex:
             continue
-        actividades = [
-            actividad
-            for actividad in estado["actividades_realizadas"]
-            if actividad["aeropuerto"] == airport_id
-        ]
+        actividades = [a for a in estado["actividades_realizadas"] if a["aeropuerto"] == airport_id]
         destinos.append({
             "aeropuerto": airport_id,
             "ciudad": vertex.get_ciudad(),
@@ -235,7 +249,7 @@ def generar_reporte_final(graph, estado: dict) -> dict:
     return {
         "destinos_visitados": destinos,
         "tramos_volados": estado["tramos_volados"],
-        "actividades": estado["actividades_realizadas"],
+        "actividades": todas_actividades, # <--- AHORA SÍ APARECEN EN EL REPORTE
         "trabajos": estado["trabajos_realizados"],
         "totales": {
             "presupuesto_inicial": estado["presupuesto_inicial"],
@@ -254,7 +268,8 @@ def generar_reporte_final(graph, estado: dict) -> dict:
 def _aplicar_vuelo(graph, estado: dict, destino: str, aeronave: str) -> dict:
     estado = _normalizar_estado(estado)
     edge = _buscar_arista(graph, estado["aeropuerto_actual"], destino)
-    option = _opcion_con_subsidio(graph, edge, edge._get_aircraft_option(aeronave))
+    km_sub_total = estado.get("km_subsidiados_total", 0.0)
+    option = _opcion_con_subsidio(graph, edge, edge._get_aircraft_option(aeronave), km_sub_total)
     tiempo_vuelo = option["tiempo"]
     tiempo_estancia = edge.get_estancia_minima()
     tiempo_total_decision = tiempo_vuelo + tiempo_estancia
@@ -293,6 +308,36 @@ def _aplicar_vuelo(graph, estado: dict, destino: str, aeronave: str) -> dict:
         "km_subsidiados": option.get("km_subsidiados", 0),
     }
 
+    nuevo_km_subsidiados = estado.get("km_subsidiados_total", 0.0) + option.get("km_subsidiados", 0)
+    nuevo_distancia_total = estado.get("distancia_total_km", 0.0) + edge.get_distance()
+
+    # --- Spec 2.3.a: log "tiempo_libre" for the airport we are DEPARTING FROM --------
+    # If the traveler's activities + jobs did not fill the mandatory minimum stay
+    # at the current airport, the leftover time is registered as "tiempo_libre".
+    estancia_prev = float(estado.get("estancia_minima_pendiente", 0.0))
+    tiempo_libre_decisiones: list = []
+    if estancia_prev > 0:
+        actual = estado["aeropuerto_actual"]
+        activities_here = sum(
+            float(a.get("duracion_min", a.get("duracion", 0)))
+            for a in estado.get("actividades_realizadas", [])
+            if a.get("aeropuerto") == actual
+        )
+        jobs_here = sum(
+            float(j.get("horas_trabajadas", 0)) * 60
+            for j in estado.get("trabajos_realizados", [])
+            if j.get("aeropuerto") == actual
+        )
+        tiempo_libre_val = round(max(0.0, estancia_prev - activities_here - jobs_here), 1)
+        if tiempo_libre_val > 0:
+            tiempo_libre_decisiones = [{
+                "tipo": "tiempo_libre",
+                "aeropuerto": actual,
+                "duracion": tiempo_libre_val,
+                "duracion_min": tiempo_libre_val,
+            }]
+    # ---------------------------------------------------------------------------------
+
     return {
         **estado,
         "aeropuerto_actual": destino,
@@ -305,8 +350,13 @@ def _aplicar_vuelo(graph, estado: dict, destino: str, aeronave: str) -> dict:
         "total_gastado": round(estado["total_gastado"] + costo_total, 2),
         "tramos_volados": [*estado["tramos_volados"], tramo],
         "costos_obligatorios": [*estado["costos_obligatorios"], *costos["eventos"]],
+        "km_subsidiados_total": round(nuevo_km_subsidiados, 2),
+        "distancia_total_km": round(nuevo_distancia_total, 2),
+        "estancia_minima_pendiente": float(edge.get_estancia_minima()),
         "decisiones": [
             *estado["decisiones"],
+            *tiempo_libre_decisiones,
+            *eventos_decisiones, # <--- AHORA EL LOG (UI) MUESTRA SI COMISTE O DORMISTE
             {
                 "tipo": "vuelo",
                 **tramo,
@@ -468,8 +518,9 @@ def _vuelos_disponibles(graph, vertex, estado):
             continue
 
         opciones = []
+        km_sub_total = estado.get("km_subsidiados_total", 0.0)
         for base_option in edge.get_aircraft_options():
-            option = _opcion_con_subsidio(graph, edge, base_option)
+            option = _opcion_con_subsidio(graph, edge, base_option, km_sub_total)
             costos = _costos_obligatorios(
                 graph,
                 vertex,
@@ -506,17 +557,27 @@ def _vuelos_disponibles(graph, vertex, estado):
     return vuelos
 
 
-def _opcion_con_subsidio(graph, edge, option):
+def _opcion_con_subsidio(graph, edge, option, km_subsidiados_total: float = 0.0):
+    """
+    Apply the global subsidy cap (default 20% of the *total distance flown so far
+    including this leg*).  Unlike the previous per-leg implementation, we track
+    how many km the traveler has already used at subsidized rate and only allow
+    the remaining budget for this leg.
+    """
     option = dict(option)
     option["km_subsidiados"] = 0
     if not edge.is_subsidiada():
         return option
 
-    limite = _config(graph, "limiteSubsidioPorc", DEFAULT_LIMITE_SUBSIDIO_PORC) / 100
-    km_subsidiados = round(edge.get_distance() * limite, 2)
-    km_cobrados = max(0, edge.get_distance() - km_subsidiados)
+    limite_porc = _config(graph, "limiteSubsidioPorc", DEFAULT_LIMITE_SUBSIDIO_PORC) / 100
+    distancia_tramo = edge.get_distance()
+    # Maximum cumulative km that can be subsidized, based on distance flown so far + this leg
+    km_maximos_subsidio = (km_subsidiados_total + distancia_tramo) * limite_porc
+    km_restantes_permitidos = max(0.0, km_maximos_subsidio - km_subsidiados_total)
+    km_subsidiados_este_tramo = min(distancia_tramo, km_restantes_permitidos)
+    km_cobrados = max(0.0, distancia_tramo - km_subsidiados_este_tramo)
     option["costo"] = round(km_cobrados * option["costo_km"], 2)
-    option["km_subsidiados"] = km_subsidiados
+    option["km_subsidiados"] = round(km_subsidiados_este_tramo, 2)
     return option
 
 

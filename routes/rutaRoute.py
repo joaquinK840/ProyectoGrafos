@@ -1,3 +1,5 @@
+import math
+
 from fastapi import APIRouter, HTTPException, Query
 
 from algorithms.bfs_dfs import dfs_mayor_destinos, planificacion_basica
@@ -16,6 +18,18 @@ from service.graphState import get_graph
 
 
 router = APIRouter()
+
+
+def _sanitize(obj):
+    """Recursively replace float('inf') / float('nan') with None so FastAPI
+    can always serialize the response to valid JSON."""
+    if isinstance(obj, float):
+        return None if (math.isinf(obj) or math.isnan(obj)) else obj
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize(i) for i in obj]
+    return obj
 
 
 def _choose_aircraft_option(edge, criterio: str, aeronaves: list[str] | None = None):
@@ -106,7 +120,7 @@ def get_ruta(
                 })
                 break
 
-    return {
+    return _sanitize({
         "criterio": criterio,
         "origen": origen,
         "destino": destino,
@@ -115,7 +129,7 @@ def get_ruta(
         "costo_total": round(costo_total, 2),
         "camino": camino,
         "tramos": tramos,
-    }
+    })
 
 
 @router.get("/itinerario")

@@ -1,4 +1,5 @@
 import json
+import math
 
 
 from fastapi import APIRouter, HTTPException, Request
@@ -142,5 +143,68 @@ def get_neighbors(vertex_name: str):
     return {"vertex": vertex_name, "neighbors": [n.get_name() for n in neighbors]}
 
 
-# ── Disponibilidad de rutas ────────────────────────────────────────────
+# ── Configuración de aeronaves ─────────────────────────────────────────────────
+# Spec section 1: "Los datos de costos por km y tiempos por km de cada aeronave
+# se pueden sobreescribir en el JSON desde la interfaz gráfica."
 
+
+@router.get("/configuracion/aeronaves")
+def get_config_aeronaves():
+    """
+    Return current per-aircraft costo_km / tiempo_km in effect for the loaded graph.
+    Reads the aircraft_config stored on the first edge found — all edges share the
+    same dict instance (unless manually diverged), so this is representative.
+    """
+    graph = get_graph()
+    config: dict = {}
+    for vertex in graph.vertices.values():
+        for edge in vertex.neighbors:
+            if hasattr(edge, "aircraft_config"):
+                for name, rates in edge.aircraft_config.items():
+                    if name not in config:
+                        config[name] = dict(rates)
+        if config:
+            break
+    return {"aeronaves": config}
+
+
+@router.put("/configuracion/aeronaves")
+def update_config_aeronaves(payload: dict):
+    """
+    Override per-aircraft costo_km / tiempo_km at runtime without reloading the JSON.
+
+    Justification: AirportEdge stores aircraft_config as a mutable dict per edge object.
+    We iterate all edges in the adjacency list — O(E) — and update each one in place.
+    This means subsequent cost/time calculations via get_aircraft_options() will use the
+    new rates immediately, with no need to rebuild the graph.
+
+    Body example:
+        {
+            "Avión Comercial": {"costo_km": 0.15, "tiempo_km": 0.65},
+            "Hélice":          {"costo_km": 0.10, "tiempo_km": 2.2}
+        }
+
+    Only the aircraft names included in the payload are updated.
+    """
+    graph = get_graph()
+    updated: dict = {}
+    for vertex in graph.vertices.values():
+        for edge in vertex.neighbors:
+            if not hasattr(edge, "aircraft_config"):
+                continue
+            for aircraft_name, new_rates in payload.items():
+                if aircraft_name in edge.aircraft_config:
+                    current = edge.aircraft_config[aircraft_name]
+                    edge.aircraft_config[aircraft_name] = {
+                        "costo_km":  float(new_rates.get("costo_km",  current.get("costo_km",  0.18))),
+                        "tiempo_km": float(new_rates.get("tiempo_km", current.get("tiempo_km", 0.7))),
+                    }
+                    updated[aircraft_name] = edge.aircraft_config[aircraft_name]
+    # Mirror into global_config for introspection
+    if not hasattr(graph, "global_config"):
+        graph.global_config = {}
+    graph.global_config.setdefault("aeronaves", {}).update(updated)
+    return {
+        "message": "Configuración de aeronaves actualizada",
+        "aeronaves_actualizadas": updated,
+    }

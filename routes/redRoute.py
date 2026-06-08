@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, Query
+import math
 
+from fastapi import APIRouter, HTTPException, Query
+from core.edge.edge import normalize_aircraft_name
 from algorithms.planificacion_avanzada import (
     obtener_opciones_planificacion,
     recalcular_avanzado_desde_estado,
@@ -155,6 +157,7 @@ def bloquear_y_recalcular(payload: dict):
     }
 
 
+
 @router.put("/bloquear")
 def bloquear_ruta(
     origen: str,
@@ -180,16 +183,31 @@ def bloquear_ruta(
         try:
             distancias, previos = dijkstra(graph, recalcular_desde, criterio)
             camino_alternativo = reconstruir_camino(previos, recalcular_desde, destino)
+            costo_destino = distancias.get(destino)
+            costo_total = None if (costo_destino is None or math.isinf(costo_destino)) else round(costo_destino, 2)
             response["ruta_alternativa"] = {
                 "criterio": criterio,
                 "camino": camino_alternativo,
-                "costo_total": distancias.get(destino, float("inf")),
+                "costo_total": costo_total,
             }
         except ValueError:
             response["ruta_alternativa"] = None
         response["rutas_disponibles_desde"] = _available_routes_from(graph, recalcular_desde)
 
     return response
+
+@router.put("/desbloquear")
+def desbloquear_ruta(origen: str, destino: str):
+    """R4 - Restore a previously blocked route."""
+    graph = get_graph()
+    origen, destino = origen.upper(), destino.upper()
+    edge = _find_edge(graph, origen, destino)
+    edge.set_available(True)
+    return {
+        "message": f"Ruta {origen} -> {destino} desbloqueada",
+        "ruta": {"origen": origen, "destino": destino, "disponible": True},
+        "grafo": serialize_airport_graph(graph),
+    }
 
 @router.get("/disponibles")
 def rutas_disponibles(origen: str):
@@ -200,3 +218,4 @@ def rutas_disponibles(origen: str):
         "origen": origen,
         "rutas": _available_routes_from(graph, origen),
     }
+

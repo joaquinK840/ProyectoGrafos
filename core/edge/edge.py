@@ -1,7 +1,7 @@
 from core.vertex.vertex import Vertex
 
 
-DEFAULT_AIRCRAFT_CONFIG = {
+AIRCRAFT_DEFAULT = {
     "Avion Comercial": {"costo_km": 0.18, "tiempo_km": 0.7},
     "Avion Regional": {"costo_km": 0.25, "tiempo_km": 1.1},
     "Helice": {"costo_km": 0.12, "tiempo_km": 2.5},
@@ -25,7 +25,7 @@ def normalize_aircraft_name(name):
 
 
 def normalize_aircraft_config(config):
-    normalized = {name: values.copy() for name, values in DEFAULT_AIRCRAFT_CONFIG.items()}
+    normalized = {name: values.copy() for name, values in AIRCRAFT_DEFAULT.items()}
     for name, values in (config or {}).items():
         normalized_name = normalize_aircraft_name(name)
         previous = normalized.get(normalized_name, {})
@@ -113,7 +113,7 @@ class Edge:
             normalized_name = normalize_aircraft_name(aircraft)
             config = self.aircraft_config.get(
                 normalized_name,
-                DEFAULT_AIRCRAFT_CONFIG["Avion Comercial"],
+                AIRCRAFT_DEFAULT["Avion Comercial"],
             )
             cost = 0 if self.is_subsidiada() else round(self.distance * config["costo_km"], 2)
             time = round(self.distance * config["tiempo_km"], 1)

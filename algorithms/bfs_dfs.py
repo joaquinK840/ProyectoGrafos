@@ -32,6 +32,8 @@ def planificacion_basica(
         raise ValueError(f"Aeropuerto '{origen}' no existe en el grafo")
 
     allowed_aircraft = _normalize_allowed_aircraft(aeronaves_permitidas)
+    # The raw (unnormalized) required set — used to verify the "use each type at least once" rule.
+    required_aircraft_raw = set(aeronaves_permitidas) if aeronaves_permitidas else set()
 
     return {
         "origen": origen,
@@ -47,6 +49,7 @@ def planificacion_basica(
             excluir_secundarios,
             allowed_aircraft,
             "costo",
+            required_aircraft_raw,
         ),
         "alternativa_tiempo": _buscar_mejor_itinerario(
             graph,
@@ -56,6 +59,7 @@ def planificacion_basica(
             excluir_secundarios,
             allowed_aircraft,
             "tiempo",
+            required_aircraft_raw,
         ),
     }
 
@@ -68,10 +72,23 @@ def _buscar_mejor_itinerario(
     excluir_secundarios,
     allowed_aircraft,
     objetivo,
+    required_aircraft: set | None = None,
 ):
     mejor = _empty_itinerary(objetivo, origen)
+    # Itinerary is only "coverage-complete" if all required aircraft types
+    # were used at least once during the trip.
+    _required = required_aircraft or set()
 
-    def _dfs(nodo_actual, visitados, camino, tramos, costo_acum, tiempo_acum):
+    def _all_aircraft_used(used: set) -> bool:
+        """True when every required aircraft type appears in the current path."""
+        if not _required:
+            return True
+        return all(
+            any(normalize_aircraft_name(req) == normalize_aircraft_name(u) for u in used)
+            for req in _required
+        )
+
+    def _dfs(nodo_actual, visitados, camino, tramos, costo_acum, tiempo_acum, used_aircraft):
         candidato = {
             "criterio": objetivo,
             "camino": list(camino),
@@ -79,6 +96,8 @@ def _buscar_mejor_itinerario(
             "costo_total": round(costo_acum, 2),
             "tiempo_total": round(tiempo_acum, 1),
             "destinos": len(camino) - 1,
+            # Extra flag — checked by _is_better_itinerary
+            "aircraft_coverage": _all_aircraft_used(used_aircraft),
         }
         if _is_better_itinerary(candidato, mejor, objetivo):
             mejor.update(candidato)
@@ -123,12 +142,14 @@ def _buscar_mejor_itinerario(
             visitados.add(vecino)
             camino.append(vecino)
             tramos.append(tramo)
-            _dfs(vecino, visitados, camino, tramos, nuevo_costo, nuevo_tiempo)
+            _dfs(vecino, visitados, camino, tramos, nuevo_costo, nuevo_tiempo, used_aircraft | {option["nombre"]})
             tramos.pop()
             camino.pop()
             visitados.remove(vecino)
 
-    _dfs(origen, {origen}, [origen], [], 0, 0)
+    _dfs(origen, {origen}, [origen], [], 0, 0, set())
+    # Remove internal flag before returning
+    mejor.pop("aircraft_coverage", None)
     return mejor
 
 
@@ -170,8 +191,10 @@ def _empty_itinerary(criterion, origin):
 
 
 def _is_better_itinerary(candidate, current, objective):
+    # Simplemente evalúa si tiene más destinos, y en caso de empate, quién es más barato/rápido.
     if candidate["destinos"] != current["destinos"]:
         return candidate["destinos"] > current["destinos"]
+    
     if objective == "tiempo":
         return (
             candidate["tiempo_total"],
