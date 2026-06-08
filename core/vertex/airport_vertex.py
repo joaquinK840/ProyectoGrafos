@@ -19,7 +19,7 @@ class AirportVertex(Vertex):
         costo_alimentacion: float = 0.0,
         actividades: list = None,
         trabajos: list = None,
-        
+        aerolineas: list = None,
     ):
         super().__init__(name=iata_id)
         self.nombre = nombre
@@ -31,7 +31,7 @@ class AirportVertex(Vertex):
         self.costo_alimentacion = costo_alimentacion
         self.actividades = actividades if actividades is not None else []
         self.trabajos = trabajos if trabajos is not None else []
-        self.aerolineas: list = []   # nuevo campo
+        self.aerolineas = aerolineas if aerolineas is not None else []
 
     def get_ciudad(self) -> str:
         return self.ciudad
@@ -41,6 +41,18 @@ class AirportVertex(Vertex):
 
     def get_es_hub(self) -> bool:
         return self.es_hub
+
+    def is_hub(self) -> bool:
+        return self.es_hub
+
+    def get_nombre_completo(self) -> str:
+        return self.nombre
+
+    def get_zona_horaria(self) -> str:
+        return self.zona_horaria
+
+    def get_aerolineas(self) -> list:
+        return self.aerolineas
 
     def get_costo_alojamiento(self) -> float:
         return self.costo_alojamiento
@@ -57,19 +69,3 @@ class AirportVertex(Vertex):
     def __repr__(self) -> str:
         hub_tag = " [HUB]" if self.es_hub else ""
         return f"AirportVertex({self.get_name()}{hub_tag} - {self.ciudad}, {self.pais})"
-    
-
-# Agregar estos métodos:
-def get_nombre_completo(self) -> str:
-    """Alias para compatibilidad con planificacion_avanzada."""
-    return self.nombre
-
-def get_zona_horaria(self) -> str:
-    return self.zona_horaria
-
-def is_hub(self) -> bool:
-    """Alias de get_es_hub() — lo que llaman los algoritmos."""
-    return self.es_hub
-
-def get_aerolineas(self) -> list:
-    return self.aerolineas

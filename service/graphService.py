@@ -1,4 +1,3 @@
-
 from core.graph.undirected_graph import Undirected_graph
 from core.vertex.vertex import Vertex
 from core.edge.edge import Edge
@@ -8,10 +7,6 @@ from core.graph.directed_graph import Directed_Graph
 
 
 def build_graph(data: dict):
-    """
-    Builds a generic directed/undirected graph from a simple dict format.
-    Expected keys: 'directed', 'vertices' (list of str), 'edges' (list of dicts).
-    """
     directed = data.get("directed", True)
     graph = Directed_Graph() if directed else Undirected_graph()
 
@@ -35,11 +30,9 @@ def build_graph(data: dict):
 
 
 def serialize_graph(graph) -> dict:
-    """Serializes a generic graph to a JSON-exportable dict."""
     directed = not isinstance(graph, Undirected_graph)
     vertices = sorted(graph.vertices.keys())
     edges = []
-
     for vertex in graph.vertices.values():
         for edge in vertex.neighbors:
             edges.append({
@@ -49,16 +42,10 @@ def serialize_graph(graph) -> dict:
                 "time": edge.get_time(),
                 "cost": edge.get_cost(),
             })
-
     return {"directed": directed, "vertices": vertices, "edges": edges}
 
 
 def build_airport_graph(data: dict) -> Directed_Graph:
-    """
-    Builds a directed graph from the airport JSON schema.
-    Expected keys: 'nodos', 'aristas', and optional 'config'.
-    Extends build_graph() without modifying it (OCP).
-    """
     graph = Directed_Graph()
     graph.aircraft_config = data.get("aeronaves", {})
     graph.global_config = {
@@ -68,7 +55,6 @@ def build_airport_graph(data: dict) -> Directed_Graph:
         "limiteSubsidioPorc": data.get("limiteSubsidioPorc", 20),
     }
 
-    # Merge aircraft config: defaults + any overrides from JSON
     config = data.get("config") or {}
     aircraft_config = AIRCRAFT_DEFAULTS.copy()
     for tipo, valores in config.get("aeronaves", {}).items():
@@ -78,10 +64,9 @@ def build_airport_graph(data: dict) -> Directed_Graph:
             "tiempo_km": valores.get("tiempoKm", base.get("tiempo_km", 0.7)),
         }
 
-    # Build vertices
     for nodo in data.get("nodos", []):
         vertex = AirportVertex(
-            iata_id=nodo["id"],                              # ← usa iata_id
+            iata_id=nodo["id"],
             nombre=nodo.get("nombre", ""),
             ciudad=nodo.get("ciudad", ""),
             pais=nodo.get("pais", ""),
@@ -91,17 +76,15 @@ def build_airport_graph(data: dict) -> Directed_Graph:
             costo_alimentacion=nodo.get("costoAlimentacion", 0.0),
             actividades=nodo.get("actividades", []),
             trabajos=nodo.get("trabajos", []),
+            aerolineas=nodo.get("aerolineas", []),
         )
         graph.add_vertex(vertex)
 
-    # Build edges
     for arista in data.get("aristas", []):
         origen = graph.get_vertex(arista["origen"])
         destino = graph.get_vertex(arista["destino"])
-
         if not origen or not destino:
-            continue  # Skip edge if either node is missing
-
+            continue
         edge = AirportEdge(
             vertex1=origen,
             vertex2=destino,
@@ -117,25 +100,23 @@ def build_airport_graph(data: dict) -> Directed_Graph:
 
 
 def serialize_airport_graph(graph) -> dict:
-    """Serializes an airport graph (AirportVertex + AirportEdge) to dict."""
     nodos = []
     for vertex in graph.vertices.values():
         nodo = {
             "id": vertex.get_name(),
-            "available": vertex.get_available(),
+            "nombre": getattr(vertex, "nombre", vertex.get_name()),
+            "ciudad": getattr(vertex, "ciudad", ""),
+            "pais": getattr(vertex, "pais", ""),
+            "zona_horaria": getattr(vertex, "zona_horaria", ""),
+            "es_hub": getattr(vertex, "es_hub", False),
+            "aerolineas": getattr(vertex, "aerolineas", []),
+            "costo_alojamiento": getattr(vertex, "costo_alojamiento", 0.0),
+            "costo_alimentacion": getattr(vertex, "costo_alimentacion", 0.0),
+            "actividades": getattr(vertex, "actividades", []),
+            "trabajos": getattr(vertex, "trabajos", []),
+            "grado_salida": len(vertex.neighbors),
+            "disponible": vertex.get_available(),
         }
-        if hasattr(vertex, "es_hub"):
-            nodo.update({
-                "nombre": vertex.nombre,
-                "ciudad": vertex.ciudad,
-                "pais": vertex.pais,
-                "zonaHoraria": vertex.zona_horaria,
-                "esHub": vertex.es_hub,
-                "costoAlojamiento": vertex.costo_alojamiento,
-                "costoAlimentacion": vertex.costo_alimentacion,
-                "actividades": vertex.actividades,
-                "trabajos": vertex.trabajos,
-            })
         nodos.append(nodo)
 
     aristas = []
@@ -144,22 +125,17 @@ def serialize_airport_graph(graph) -> dict:
             arista = {
                 "origen": edge.get_vertex1().get_name(),
                 "destino": edge.get_vertex2().get_name(),
-                "available": edge.get_available() if hasattr(edge, "get_available") else True,
+                "distancia_km": getattr(edge, "distancia_km", edge.get_distance()),
+                "aeronaves": getattr(edge, "aeronaves", []),
+                "costo_base": getattr(edge, "costo_base", -1.0),
+                "estancia_minima": getattr(edge, "estancia_minima", 0),
+                "disponible": edge.get_available() if hasattr(edge, "get_available") else True,
+                "opciones_aeronaves": edge.get_aircraft_options() if hasattr(edge, "get_aircraft_options") else [],
             }
-            if hasattr(edge, "distancia_km"):
-                arista.update({
-                    "distanciaKm": edge.distancia_km,
-                    "aeronaves": edge.aeronaves,
-                    "costoBase": edge.costo_base,
-                    "estanciaMinima": edge.estancia_minima,
-                    "opcionesAeronave": edge.get_opciones_aeronave(),
-                })
             aristas.append(arista)
 
     return {
         "directed": True,
-        "aeronaves": getattr(graph, "aircraft_config", {}),
-        "configuracion": getattr(graph, "global_config", {}),
         "nodos": nodos,
         "aristas": aristas,
         "total_nodos": len(nodos),

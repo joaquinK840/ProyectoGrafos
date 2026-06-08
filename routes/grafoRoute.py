@@ -1,5 +1,6 @@
 import json
 
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
@@ -22,6 +23,18 @@ def _is_airport_graph(graph) -> bool:
 def _serialize_current_graph() -> dict:
     graph = get_graph()
     return serialize_airport_graph(graph) if _is_airport_graph(graph) else serialize_graph(graph)
+
+def sanitize_floats(obj):
+    """Recursively replaces inf/nan float values with None for JSON compliance."""
+    if isinstance(obj, float):
+        if math.isinf(obj) or math.isnan(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: sanitize_floats(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_floats(i) for i in obj]
+    return obj
 
 
 # ── Carga ──────────────────────────────────────────────────────────────
@@ -52,23 +65,18 @@ async def load_graph_file(request: Request):
 
 @router.post("/cargar-vuelos")
 def cargar_vuelos(payload: AirportGraphPayload):
-    """
-    R1 — Loads the airport network from the domain-specific JSON schema.
-    Validates structure via Pydantic before building the graph.
-    """
     try:
         graph = build_airport_graph(payload.model_dump())
         set_graph(graph)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
-    return {"message": "Red aérea cargada correctamente", "graph": serialize_airport_graph(get_graph())}
+    return serialize_airport_graph(get_graph())
 
-
-# ── Consulta ───────────────────────────────────────────────────────────
 
 @router.get("")
 def get_graph_endpoint():
     return _serialize_current_graph()
+
 
 @router.get("/exportar")
 def export_graph():
@@ -76,6 +84,7 @@ def export_graph():
         content=_serialize_current_graph(),
         headers={"Content-Disposition": "attachment; filename=graph.json"},
     )
+
 
 @router.get("/aeropuerto/{iata_id}")
 def get_airport_detail(iata_id: str):
@@ -109,6 +118,7 @@ def add_vertex(payload: VertexPayload):
         raise HTTPException(status_code=400, detail=str(error)) from error
     return serialize_graph(get_graph())
 
+
 @router.post("/edges")
 def add_edge(payload: EdgePayload):
     graph = get_graph()
@@ -120,6 +130,7 @@ def add_edge(payload: EdgePayload):
         raise HTTPException(status_code=400, detail=str(error)) from error
     return serialize_graph(graph)
 
+
 @router.get("/vertices/{vertex_name}/vecinos")
 def get_neighbors(vertex_name: str):
     graph = get_graph()
@@ -129,3 +140,7 @@ def get_neighbors(vertex_name: str):
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     return {"vertex": vertex_name, "neighbors": [n.get_name() for n in neighbors]}
+
+
+# ── Disponibilidad de rutas ────────────────────────────────────────────
+
