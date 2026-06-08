@@ -1,3 +1,56 @@
+"""
+routes/rutaRoute.py — Route-finding and planning API endpoints
+==============================================================
+Exposes all pathfinding and trip-planning functionality under the
+``/grafo`` prefix (registered in main.py).
+
+Endpoint summary
+----------------
+GET  /grafo/ruta
+    Dijkstra shortest path between two airports.  Query-parameter version;
+    does not support per-aircraft rate overrides.
+
+POST /grafo/ruta
+    Same as GET but accepts a JSON body, which allows the client to send an
+    ``aeronaves_config`` dict with custom per-km rates.
+
+GET  /grafo/itinerario
+    Single-alternative DFS: maximise destinations within budget and time
+    (``dfs_mayor_destinos``).  Legacy endpoint; prefer /planificacion-basica.
+
+GET  /grafo/planificacion-basica
+    Two-alternative DFS itinerary (Requirement 3): one optimised for cost,
+    one for time.  Returns both alternatives in a single response.
+
+GET  /grafo/itinerario-avanzado
+    Initialise a step-by-step advanced planning session (Requirement 4).
+    Returns the first set of available decisions.
+
+GET  /grafo/itinerario-avanzado/automatico
+    Automatic bounded-DFS advanced planner.  Returns the best complete
+    itinerary found within ``max_expansiones`` node expansions.
+
+POST /grafo/itinerario-avanzado/opciones
+    Given a serialised state dict, return the available decisions
+    (flights, activities, jobs) from the current airport.
+
+POST /grafo/itinerario-avanzado/vuelo
+    Apply a flight decision and return the next available options.
+    Body: ``{ estado, destino, aeronave }``.
+
+POST /grafo/itinerario-avanzado/actividad
+    Apply an optional activity and return the next available options.
+    Body: ``{ estado, actividad }``.
+
+POST /grafo/itinerario-avanzado/trabajo
+    Apply a temporary job and return the next available options.
+    Body: ``{ estado, trabajo, horas }``.
+
+POST /grafo/itinerario-avanzado/reporte
+    Generate the final R5-compatible trip report from a state dict.
+    Body: state dict (same schema as ``crear_estado_planificacion``).
+"""
+
 import math
 
 from fastapi import APIRouter, HTTPException, Query
@@ -128,7 +181,25 @@ def get_ruta(
     excluir_secundarios: bool = False,
     aeronaves: list[str] | None = Query(default=None),
 ):
-    """R2 - Shortest path. criterio: distancia | tiempo | costo | combinado."""
+    """Compute the shortest path between two airports (Requirement 2).
+
+    Uses Dijkstra with the chosen optimisation criterion.  Returns each
+    intermediate leg with per-leg and cumulative distance, time, and cost.
+
+    Query parameters
+    ----------------
+    origen : str
+        IATA code of the origin airport (case-insensitive).
+    destino : str
+        IATA code of the destination airport.
+    criterio : str
+        ``distancia`` | ``tiempo`` | ``costo`` | ``combinado``.
+    excluir_secundarios : bool
+        Skip non-hub intermediate airports when ``true``.
+    aeronaves : list[str]
+        Restrict to edges served by these aircraft types.  Repeat the param
+        for multiple types: ``?aeronaves=Avión Comercial&aeronaves=Hélice``.
+    """
     graph = get_graph()
     origen = origen.upper()
     destino = destino.upper()
@@ -139,7 +210,18 @@ def get_ruta(
 
 @router.post("/ruta")
 def post_ruta(body: dict):
-    """R2 - Shortest path accepting aeronaves_config override from frontend."""
+    """Compute the shortest path with optional per-aircraft rate overrides.
+
+    Identical to GET /ruta but accepts a JSON body, which allows the React
+    frontend to send custom ``aeronaves_config`` rates without URL-encoding.
+
+    Body fields
+    -----------
+    origen, destino, criterio, excluir_secundarios, aeronaves : same as GET
+    aeronaves_config : dict
+        ``{ aircraft_name: { costoKm, tiempoKm } }`` — overrides the stored
+        per-km rates for this query only.  camelCase and snake_case both accepted.
+    """
     graph = get_graph()
     origen = body.get("origen", "").upper()
     destino = body.get("destino", "").upper()
@@ -191,7 +273,20 @@ def get_planificacion_basica(
     excluir_secundarios: bool = False,
     aeronaves: list[str] | None = Query(default=None),
 ):
-    """R2 - Two basic itinerary alternatives with budget/time constraints."""
+    """Return two itinerary alternatives maximising visited destinations (R3).
+
+    Runs two DFS passes and returns:
+    - ``alternativa_presupuesto``: most destinations, fewest dollars on ties.
+    - ``alternativa_tiempo``:  most destinations, least minutes on ties.
+
+    Query parameters
+    ----------------
+    origen : str         Origin IATA code.
+    presupuesto : float  Maximum trip budget in USD.
+    tiempo_horas : float Maximum trip duration in hours.
+    excluir_secundarios : bool  Skip non-hub intermediate stops.
+    aeronaves : list[str]  Restrict to specified aircraft types.
+    """
     graph = get_graph()
     try:
         resultado = planificacion_basica(

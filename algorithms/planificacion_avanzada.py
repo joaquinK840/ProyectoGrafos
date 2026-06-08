@@ -1,10 +1,70 @@
 """
-Advanced planning - R3.
+algorithms/planificacion_avanzada.py — Advanced trip planner (Requirement 4)
+=============================================================================
+Implements the R4 advanced planning engine.  It models the traveler as a
+*state machine* that evolves as decisions are made, and enforces several
+domain rules automatically.
 
-The module supports two flows:
-- step-by-step decisions for the UI;
-- an automatic bounded DFS that maximizes visited destinations and minimizes
-  total spending among routes with the same destination count.
+Two operating modes
+-------------------
+paso_a_paso (step-by-step)
+    The React UI sends one decision at a time (fly / do activity / work).
+    Each call updates the immutable state dict and returns the new set of
+    available options.  Entry point: ``planificar_avanzado`` → ``obtener_opciones_planificacion``.
+
+automatico (automatic DFS)
+    A bounded DFS explores every feasible sequence of flights, picks the best
+    itinerary (most destinations → least spending → least time), and returns
+    the full trip report.  Entry point: ``planificar_avanzado_automatico``.
+
+State machine fields
+--------------------
+The *estado* dict is immutable — every transition creates a new dict.
+
+    aeropuerto_actual       : IATA code of the current location
+    presupuesto_inicial     : starting budget in USD
+    presupuesto_actual      : remaining budget in USD
+    tiempo_disponible_min   : maximum trip time in minutes
+    tiempo_transcurrido_min : elapsed trip time in minutes
+    ultimo_alojamiento_min  : elapsed time at last lodging charge
+    ultima_alimentacion_min : elapsed time at last food charge
+    visitados               : ordered list of visited IATA codes
+    camino                  : same as visitados (alias kept for report)
+    total_gastado           : cumulative spending in USD
+    total_ganado            : cumulative job earnings in USD
+    decisiones              : ordered log of all decision entries
+    tramos_volados          : list of flight leg dicts
+    actividades_realizadas  : list of optional activity dicts
+    trabajos_realizados     : list of job dicts
+    costos_obligatorios     : list of automatic food/lodging charge events
+    km_subsidiados_total    : cumulative km flown at subsidised rate
+    distancia_total_km      : cumulative km flown (all legs)
+    estancia_minima_pendiente : min layover of the last edge, carried forward
+
+Domain rules
+------------
+Lodging (alojamiento)
+    Charged every 20 h of elapsed time.  The airport where the 20 h window
+    closes is charged ``costo_alojamiento`` USD.
+
+Food (alimentacion)
+    Charged every 8 h of elapsed time.  If the window closes *during* a
+    flight, the origin airport's ``costo_alimentacion`` is used; otherwise
+    the destination airport's.
+
+Jobs (trabajos)
+    Unlocked only when ``presupuesto_actual ≤ presupuesto_inicial × 35 %``.
+    The automatic planner picks the highest-paying job available.
+
+Subsidy cap
+    No more than 20 % of the *total distance flown so far including this leg*
+    may be subsidised.  ``_opcion_con_subsidio`` computes the remaining
+    allowed subsidised km and charges the excess at the normal per-km rate.
+
+Tiempo libre
+    When the traveler departs an airport before filling the mandatory layover
+    (``estancia_minima``) with activities or jobs, the remainder is recorded
+    as a ``tipo: "tiempo_libre"`` entry in ``decisiones``.
 """
 
 
@@ -22,7 +82,30 @@ def planificar_avanzado(
     presupuesto_inicial: float,
     tiempo_disponible: float | None = None,
 ) -> dict:
-    """Create the initial step-by-step planning state."""
+    """Initialise a step-by-step advanced planning session.
+
+    Creates the initial state at *origen* and immediately returns the first
+    set of available options (flights, activities, jobs) so the UI can render
+    the decision panel.
+
+    Parameters
+    ----------
+    graph : Directed_Graph
+        The in-memory flight network.
+    origen : str
+        IATA code of the departure airport.
+    presupuesto_inicial : float
+        Starting budget in USD.
+    tiempo_disponible : float or None
+        Maximum trip duration in minutes.  Defaults to 72 hours (4 320 min).
+
+    Returns
+    -------
+    dict
+        ``modo``, ``estado``, ``aeropuerto_actual``, ``reglas``,
+        ``actividades_opcionales``, ``trabajos_disponibles``,
+        ``trabajos_habilitados``, ``vuelos_disponibles``, ``mensaje``.
+    """
     estado = crear_estado_planificacion(
         graph,
         origen,
@@ -39,12 +122,34 @@ def planificar_avanzado_automatico(
     tiempo_disponible: float | None = None,
     max_expansiones: int = DEFAULT_MAX_EXPANSIONES,
 ) -> dict:
-    """
-    Search an advanced itinerary.
+    """Run the automatic DFS planner and return the best itinerary found.
 
-    DFS is bounded by max_expansiones to keep the API responsive with the
-    30-airport test graph. Candidate comparison follows the requirement:
-    maximize destinations first, then minimize total spent, then minimize time.
+    Explores feasible flight sequences from *origen*, applying all domain rules
+    (food, lodging, subsidy cap, job threshold) at each step.  The search is
+    bounded by *max_expansiones* to keep response times predictable on large
+    graphs.
+
+    Candidate ranking: most destinations visited → lowest total spending →
+    lowest elapsed time.
+
+    Parameters
+    ----------
+    graph : Directed_Graph
+        The in-memory flight network.
+    origen : str
+        IATA code of the departure airport.
+    presupuesto_inicial : float
+        Starting budget in USD.
+    tiempo_disponible : float or None
+        Maximum trip duration in minutes.  Defaults to 72 h.
+    max_expansiones : int
+        Hard limit on DFS node expansions.  Prevents timeouts on dense graphs.
+
+    Returns
+    -------
+    dict
+        ``modo`` (``"automatico"``), ``expansiones``, ``limite_expansiones``,
+        ``limite_alcanzado``, ``itinerario`` (full R5-compatible report dict).
     """
     inicial = crear_estado_planificacion(
         graph,
@@ -60,7 +165,25 @@ def recalcular_avanzado_desde_estado(
     estado: dict,
     max_expansiones: int = DEFAULT_MAX_EXPANSIONES,
 ) -> dict:
-    """Continue the automatic R3 search from an existing trip state."""
+    """Continue the automatic planner from a partially-completed trip state.
+
+    Used when the user has already made some decisions (e.g. flew a few legs
+    manually) and then switches to automatic mode to finish the itinerary.
+
+    Parameters
+    ----------
+    graph : Directed_Graph
+        The in-memory flight network.
+    estado : dict
+        Existing trip state (must pass ``_normalizar_estado`` validation).
+    max_expansiones : int
+        DFS expansion limit (same semantics as ``planificar_avanzado_automatico``).
+
+    Returns
+    -------
+    dict
+        Same structure as ``planificar_avanzado_automatico``.
+    """
     estado = _normalizar_estado(estado)
     if estado["aeropuerto_actual"] not in graph.vertices:
         raise ValueError(f"Aeropuerto actual '{estado['aeropuerto_actual']}' no existe en el grafo")
@@ -139,6 +262,33 @@ def crear_estado_planificacion(
     presupuesto_inicial: float,
     tiempo_disponible: float,
 ) -> dict:
+    """Build a fresh trip state dict for a new planning session.
+
+    All counters start at zero and the traveler is placed at *origen*.
+    The returned dict is the authoritative schema for every state transition
+    function in this module.
+
+    Parameters
+    ----------
+    graph : Directed_Graph
+        The in-memory flight network (used to validate *origen*).
+    origen : str
+        IATA code of the starting airport.
+    presupuesto_inicial : float
+        Initial budget in USD (must be ≥ 0).
+    tiempo_disponible : float
+        Maximum trip time in minutes (must be ≥ 0).
+
+    Returns
+    -------
+    dict
+        Initial state with all required fields set to their zero values.
+
+    Raises
+    ------
+    ValueError
+        If *origen* does not exist in the graph, or if budget / time are negative.
+    """
     if origen not in graph.vertices:
         raise ValueError(f"Aeropuerto '{origen}' no existe en el grafo")
     if presupuesto_inicial < 0:
@@ -214,7 +364,18 @@ def simular_decision_trabajo(graph, estado: dict, nombre_trabajo: str, horas: fl
 
 
 def generar_reporte_final(graph, estado: dict) -> dict:
-    """Build the R5-compatible report from the R3 state."""
+    """Build the R5-compatible trip report from a completed (or mid-trip) state.
+
+    Merges mandatory cost events (food, lodging) into the activities list so
+    the UI can display them alongside optional activities.  Computes per-
+    destination summaries (city, country, time spent, cost).
+
+    Returns
+    -------
+    dict
+        ``destinos_visitados``, ``tramos_volados``, ``actividades``,
+        ``trabajos``, ``totales`` (budget summary), ``camino``, ``estado``.
+    """
     estado = _normalizar_estado(estado)
     destinos = []
     
@@ -566,11 +727,28 @@ def _vuelos_disponibles(graph, vertex, estado):
 
 
 def _opcion_con_subsidio(graph, edge, option, km_subsidiados_total: float = 0.0):
-    """
-    Apply the global subsidy cap (default 20% of the *total distance flown so far
-    including this leg*).  Unlike the previous per-leg implementation, we track
-    how many km the traveler has already used at subsidized rate and only allow
-    the remaining budget for this leg.
+    """Apply the global subsidy cap to a flight option.
+
+    The subsidy cap allows at most ``limite_subsidio_porc`` % (default 20 %) of
+    the *cumulative distance flown including this leg* to be subsidised.  Any km
+    beyond the cap are charged at the normal per-km rate.
+
+    Parameters
+    ----------
+    graph : Directed_Graph
+        Used to read the configured ``limiteSubsidioPorc`` value.
+    edge : AirportEdge
+        The flight leg being evaluated.
+    option : dict
+        Aircraft option dict from ``get_aircraft_options()`` (will be copied).
+    km_subsidiados_total : float
+        Cumulative subsidised km already used before this leg.
+
+    Returns
+    -------
+    dict
+        Updated option with corrected ``costo`` and a new ``km_subsidiados`` key
+        indicating how many km of this leg were covered at zero cost.
     """
     option = dict(option)
     option["km_subsidiados"] = 0
