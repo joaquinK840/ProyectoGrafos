@@ -1,6 +1,7 @@
 from core.graph.undirected_graph import Undirected_graph
 from core.vertex.vertex import Vertex
 from core.edge.edge import Edge
+from core.edge.edge import normalize_aircraft_config
 from core.vertex.airport_vertex import AirportVertex
 from core.edge.airport_edge import AirportEdge, AIRCRAFT_DEFAULTS
 from core.graph.directed_graph import Directed_Graph
@@ -47,7 +48,7 @@ def serialize_graph(graph) -> dict:
 
 def build_airport_graph(data: dict) -> Directed_Graph:
     graph = Directed_Graph()
-    graph.aircraft_config = data.get("aeronaves", {})
+    graph.aircraft_config = normalize_aircraft_config(data.get("aeronaves", {}))
     graph.global_config = {
         "presupuestoMinimoPorc": data.get("presupuestoMinimoPorc", 35),
         "intervaloAlojamiento": data.get("intervaloAlojamiento", 20),
@@ -56,13 +57,10 @@ def build_airport_graph(data: dict) -> Directed_Graph:
     }
 
     config = data.get("config") or {}
-    aircraft_config = AIRCRAFT_DEFAULTS.copy()
-    for tipo, valores in config.get("aeronaves", {}).items():
-        base = aircraft_config.get(tipo, {})
-        aircraft_config[tipo] = {
-            "costo_km": valores.get("costoKm", base.get("costo_km", 0.18)),
-            "tiempo_km": valores.get("tiempoKm", base.get("tiempo_km", 0.7)),
-        }
+    aircraft_config = normalize_aircraft_config({
+        **data.get("aeronaves", {}),
+        **config.get("aeronaves", {}),
+    })
 
     for nodo in data.get("nodos", []):
         vertex = AirportVertex(

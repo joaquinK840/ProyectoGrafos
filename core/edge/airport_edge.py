@@ -62,23 +62,22 @@ class AirportEdge(Edge):
 
     # ── Métodos que llaman los algoritmos (R2/R3) ────────────────────
 
-    def get_aircraft_options(self) -> list:
-        # Importamos la función normalizadora
-        from core.edge.edge import normalize_aircraft_name 
-        
+    def get_aircraft_options(self, config_override: dict | None = None) -> list:
+        from core.edge.edge import normalize_aircraft_name
+
+        effective_config = config_override if config_override is not None else self.aircraft_config
         aeronaves = self.aeronaves if self.aeronaves else ["Avion Comercial"]
         options = []
         for nombre in aeronaves:
-            # Normalizamos el nombre para evitar problemas de TILDES o mayúsculas
             nombre_norm = normalize_aircraft_name(nombre)
-            config = self.aircraft_config.get(
+            config = effective_config.get(
                 nombre_norm, AIRCRAFT_DEFAULTS.get(nombre_norm, {"costo_km": 0.18, "tiempo_km": 0.7})
             )
             costo_km = config.get("costo_km", 0.18)
             tiempo_km = config.get("tiempo_km", 0.7)
             options.append({
-                "nombre": nombre, # Mantenemos el nombre original para display
-                "nombre_normalizado": nombre_norm, 
+                "nombre": nombre,
+                "nombre_normalizado": nombre_norm,
                 "costo_km": costo_km,
                 "tiempo_km": tiempo_km,
                 "costo": 0.0 if self.is_subsidiada() else round(self.distancia_km * costo_km, 2),

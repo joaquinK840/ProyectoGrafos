@@ -19,6 +19,7 @@ def dijkstra(
     destino: str | None = None,
     excluir_secundarios: bool = False,
     aeronaves_permitidas: list[str] | None = None,
+    aeronaves_config: dict | None = None,
 ) -> tuple[dict, dict]:
     """
     Calcula el camino mínimo desde origen a todos los demás nodos.
@@ -78,7 +79,7 @@ def dijkstra(
                 continue
 
             # Peso según criterio
-            peso = _get_peso(edge, criterio, aeronaves_permitidas)
+            peso = _get_peso(edge, criterio, aeronaves_permitidas, aeronaves_config)
             nuevo_costo = costo_actual + peso
 
             if nuevo_costo < distancias[vecino]:
@@ -125,8 +126,8 @@ def _edge_has_allowed_aircraft(edge, aeronaves_permitidas: list[str]) -> bool:
     )
 
 
-def _get_filtered_options(edge, aeronaves_permitidas: list[str] | None):
-    options = edge.get_aircraft_options()
+def _get_filtered_options(edge, aeronaves_permitidas: list[str] | None, aeronaves_config: dict | None = None):
+    options = edge.get_aircraft_options(aeronaves_config) if hasattr(edge, "get_aircraft_options") else []
     if not aeronaves_permitidas:
         return options
 
@@ -138,9 +139,9 @@ def _get_filtered_options(edge, aeronaves_permitidas: list[str] | None):
     ]
 
 
-def _get_peso(edge, criterio: str, aeronaves_permitidas: list[str] | None = None) -> float:
+def _get_peso(edge, criterio: str, aeronaves_permitidas: list[str] | None = None, aeronaves_config: dict | None = None) -> float:
     """Devuelve el peso de la arista segun el criterio elegido."""
-    options = _get_filtered_options(edge, aeronaves_permitidas)
+    options = _get_filtered_options(edge, aeronaves_permitidas, aeronaves_config)
     if not options:
         return float("inf")
 

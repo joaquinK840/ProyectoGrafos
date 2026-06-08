@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from algorithms.bfs_dfs import dfs_mayor_destinos, planificacion_basica
 from algorithms.dijkstra import dijkstra, reconstruir_camino
-from core.edge.edge import normalize_aircraft_name
+from core.edge.edge import normalize_aircraft_name, normalize_aircraft_config
 from algorithms.planificacion_avanzada import (
     generar_reporte_final,
     obtener_opciones_planificacion,
@@ -32,8 +32,8 @@ def _sanitize(obj):
     return obj
 
 
-def _choose_aircraft_option(edge, criterio: str, aeronaves: list[str] | None = None):
-    options = edge.get_aircraft_options()
+def _choose_aircraft_option(edge, criterio: str, aeronaves: list[str] | None = None, aeronaves_config: dict | None = None):
+    options = edge.get_aircraft_options(aeronaves_config) if hasattr(edge, "get_aircraft_options") else []
     if aeronaves:
         allowed = {normalize_aircraft_name(aircraft) for aircraft in aeronaves}
         options = [
@@ -59,21 +59,8 @@ def _choose_aircraft_option(edge, criterio: str, aeronaves: list[str] | None = N
     return min(options, key=lambda option: (option["costo"], option["tiempo"]))
 
 
-@router.get("/ruta")
-def get_ruta(
-    origen: str,
-    destino: str,
-    criterio: str = "distancia",
-    excluir_secundarios: bool = False,
-    aeronaves: list[str] | None = Query(default=None),
-):
-    """R2 - Shortest path. criterio: distancia | tiempo | costo | combinado."""
-    graph = get_graph()
-    origen = origen.upper()
-    destino = destino.upper()
-
-    if destino not in graph.vertices:
-        raise HTTPException(status_code=400, detail=f"Aeropuerto destino '{destino}' no existe en el grafo")
+def _compute_ruta(graph, origen: str, destino: str, criterio: str, excluir_secundarios: bool, aeronaves: list[str] | None, aeronaves_config: dict | None):
+    normalized_config = normalize_aircraft_config(aeronaves_config) if aeronaves_config else None
 
     try:
         distancias, previos = dijkstra(
@@ -83,6 +70,7 @@ def get_ruta(
             destino=destino,
             excluir_secundarios=excluir_secundarios,
             aeronaves_permitidas=aeronaves,
+            aeronaves_config=normalized_config,
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
@@ -100,7 +88,7 @@ def get_ruta(
         v1, v2 = camino[i], camino[i + 1]
         for edge in graph.vertices[v1].neighbors:
             if edge.get_vertex2().get_name() == v2:
-                option = _choose_aircraft_option(edge, criterio, aeronaves)
+                option = _choose_aircraft_option(edge, criterio, aeronaves, normalized_config)
                 distancia = edge.get_distance()
                 tiempo = option["tiempo"]
                 costo = option["costo"]
@@ -130,6 +118,41 @@ def get_ruta(
         "camino": camino,
         "tramos": tramos,
     })
+
+
+@router.get("/ruta")
+def get_ruta(
+    origen: str,
+    destino: str,
+    criterio: str = "distancia",
+    excluir_secundarios: bool = False,
+    aeronaves: list[str] | None = Query(default=None),
+):
+    """R2 - Shortest path. criterio: distancia | tiempo | costo | combinado."""
+    graph = get_graph()
+    origen = origen.upper()
+    destino = destino.upper()
+    if destino not in graph.vertices:
+        raise HTTPException(status_code=400, detail=f"Aeropuerto destino '{destino}' no existe en el grafo")
+    return _compute_ruta(graph, origen, destino, criterio, excluir_secundarios, aeronaves, None)
+
+
+@router.post("/ruta")
+def post_ruta(body: dict):
+    """R2 - Shortest path accepting aeronaves_config override from frontend."""
+    graph = get_graph()
+    origen = body.get("origen", "").upper()
+    destino = body.get("destino", "").upper()
+    criterio = body.get("criterio", "distancia")
+    excluir_secundarios = body.get("excluir_secundarios", False)
+    aeronaves = body.get("aeronaves") or None
+    aeronaves_config = body.get("aeronaves_config") or None
+
+    if not origen or not destino:
+        raise HTTPException(status_code=400, detail="origen y destino son requeridos")
+    if destino not in graph.vertices:
+        raise HTTPException(status_code=400, detail=f"Aeropuerto destino '{destino}' no existe en el grafo")
+    return _compute_ruta(graph, origen, destino, criterio, excluir_secundarios, aeronaves, aeronaves_config)
 
 
 @router.get("/itinerario")

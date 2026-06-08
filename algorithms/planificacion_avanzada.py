@@ -188,7 +188,7 @@ def obtener_opciones_planificacion(graph, estado: dict) -> dict:
         "aeropuerto_actual": _serializar_aeropuerto(vertex),
         "reglas": _reglas(graph),
         "actividades_opcionales": _actividades_opcionales(vertex),
-        "trabajos_disponibles": vertex.get_trabajos() if trabajos_habilitados else [],
+        "trabajos_disponibles": vertex.get_trabajos(),
         "trabajos_habilitados": trabajos_habilitados,
         "vuelos_disponibles": _vuelos_disponibles(graph, vertex, estado),
         "mensaje": "Seleccione una actividad, trabajo o vuelo para avanzar al siguiente paso.",
@@ -336,6 +336,15 @@ def _aplicar_vuelo(graph, estado: dict, destino: str, aeronave: str) -> dict:
                 "duracion": tiempo_libre_val,
                 "duracion_min": tiempo_libre_val,
             }]
+
+    eventos_decisiones = [
+        {
+            "tipo": evento["tipo"],
+            "aeropuerto": evento["aeropuerto"],
+            "costo": round(float(evento["costo"]), 2),
+        }
+        for evento in costos["eventos"]
+    ]
     # ---------------------------------------------------------------------------------
 
     return {
@@ -410,7 +419,6 @@ def _aplicar_trabajo(graph, estado: dict, nombre_trabajo: str, horas: float) -> 
     estado = _normalizar_estado(estado)
     if not _trabajos_habilitados(graph, estado):
         raise ValueError("Los trabajos solo se habilitan cuando el presupuesto baja del umbral")
-
     vertex = graph.vertices[estado["aeropuerto_actual"]]
     trabajo = _buscar_por_nombre(vertex.get_trabajos(), nombre_trabajo, "trabajo")
     horas = float(horas)

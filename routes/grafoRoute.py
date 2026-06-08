@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from schemas.grafoSchema import GraphPayload, AirportGraphPayload
 from schemas.edgeSchema import EdgePayload
 from schemas.vertexSchema import VertexPayload
-from core.edge.edge import Edge
+from core.edge.edge import Edge, normalize_aircraft_config, normalize_aircraft_name
 from core.vertex.vertex import Vertex
 from service.graphService import build_graph, serialize_graph, build_airport_graph, serialize_airport_graph
 from service.graphState import get_graph, set_graph
@@ -160,7 +160,7 @@ def get_config_aeronaves():
     for vertex in graph.vertices.values():
         for edge in vertex.neighbors:
             if hasattr(edge, "aircraft_config"):
-                for name, rates in edge.aircraft_config.items():
+                for name, rates in normalize_aircraft_config(edge.aircraft_config).items():
                     if name not in config:
                         config[name] = dict(rates)
         if config:
@@ -187,24 +187,28 @@ def update_config_aeronaves(payload: dict):
     Only the aircraft names included in the payload are updated.
     """
     graph = get_graph()
+    normalized_payload = normalize_aircraft_config(payload)
     updated: dict = {}
     for vertex in graph.vertices.values():
         for edge in vertex.neighbors:
             if not hasattr(edge, "aircraft_config"):
                 continue
-            for aircraft_name, new_rates in payload.items():
-                if aircraft_name in edge.aircraft_config:
-                    current = edge.aircraft_config[aircraft_name]
-                    edge.aircraft_config[aircraft_name] = {
-                        "costo_km":  float(new_rates.get("costo_km",  current.get("costo_km",  0.18))),
-                        "tiempo_km": float(new_rates.get("tiempo_km", current.get("tiempo_km", 0.7))),
-                    }
-                    updated[aircraft_name] = edge.aircraft_config[aircraft_name]
+            edge.aircraft_config = normalize_aircraft_config(edge.aircraft_config)
+            for aircraft_name, new_rates in normalized_payload.items():
+                normalized_name = normalize_aircraft_name(aircraft_name)
+                current = edge.aircraft_config.get(normalized_name, {})
+                edge.aircraft_config[normalized_name] = {
+                    "costo_km": float(new_rates.get("costo_km", current.get("costo_km", 0.18))),
+                    "tiempo_km": float(new_rates.get("tiempo_km", current.get("tiempo_km", 0.7))),
+                }
+                updated[normalized_name] = edge.aircraft_config[normalized_name]
     # Mirror into global_config for introspection
     if not hasattr(graph, "global_config"):
         graph.global_config = {}
     graph.global_config.setdefault("aeronaves", {}).update(updated)
+    graph.aircraft_config = updated
     return {
         "message": "Configuración de aeronaves actualizada",
         "aeronaves_actualizadas": updated,
+        "grafo": serialize_airport_graph(graph),
     }
