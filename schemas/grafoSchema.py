@@ -40,7 +40,7 @@ class AirportEdgePayload(BaseModel):
     estanciaMinima: int = 0
 
 class AirportGraphPayload(BaseModel):
-    model_config = ConfigDict(extra="allow")  # ← ignora aeronaves/config sin explotar
+    model_config = ConfigDict(extra="allow")  # ← ignora aeronaves/config 
     nodos: list[AirportVertexPayload]
     aristas: list[AirportEdgePayload]
     config: Optional[dict] = None

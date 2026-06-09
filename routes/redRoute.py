@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from algorithms.planificacion_avanzada import (
+from service.planificacionService import (
     obtener_opciones_planificacion,
     recalcular_avanzado_desde_estado,
 )
@@ -175,7 +175,7 @@ def bloquear_ruta(
     }
 
     if recalcular_desde:
-        from algorithms.dijkstra import dijkstra, reconstruir_camino
+        from service.dijkstraService import dijkstra, reconstruir_camino
         recalcular_desde = recalcular_desde.upper()
         try:
             distancias, previos = dijkstra(graph, recalcular_desde, criterio)
